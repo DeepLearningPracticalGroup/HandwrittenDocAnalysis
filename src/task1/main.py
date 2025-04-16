@@ -1,6 +1,7 @@
-## runnning script
-from preprocessing import preprocess_image
+from preprocessing import *
 
 image_path = "image-data"
 
 dataset = preprocess_image(image_path)
+
+hough_transform(dataset)
