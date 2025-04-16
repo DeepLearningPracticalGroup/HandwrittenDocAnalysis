@@ -181,3 +181,5 @@ cython_debug/
 ## Project specific
 
 /monkbrill/
+
+/test-image-data/
