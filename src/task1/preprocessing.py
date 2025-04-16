@@ -1,5 +1,6 @@
 import cv2
 import os
+import matplotlib.pyplot as plt
 
 def preprocess_image(image_path):
     dataset = []
@@ -11,9 +12,12 @@ def preprocess_image(image_path):
     return dataset
 
 def hough_transform(dataset):
-    print("Trying to read:", dataset[0])
     img = cv2.imread(dataset[0], cv2.IMREAD_GRAYSCALE)
-    print("Loaded image:", img)
-    cv2.imshow("Image", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+    if img is None:
+        print("Image not loaded.")
+        return
+
+    plt.imshow(img, cmap='gray')
+    plt.axis("off")
+    plt.show()
