@@ -1,12 +1,16 @@
 """
-Task 01: DSS dataset
+Baseline for:
 (a) Preprocessing and character segmentation
-(b) Character recognition
+
+enter the following command in terminal:
+ipython src/task1/scripts/main.py
+or
+myenv/bin/ipython src/task1/scripts/segmentation_baseline.py
 """
 
+import cv2
 from time import perf_counter
-from preprocessing import *
-
+from src.task1.utils.preprocessing import *
 
 def main():
 
@@ -15,8 +19,10 @@ def main():
     image_path = "image-data"
 
     dataset = get_binarized_images(image_path)
+    plot_image(image_path=dataset[0])
+    # Image cleaning and denoising
+    clean_images_adaptive(dataset,show_preview=True)
 
-    hough_transform(dataset)
 
 
     print(f"Running time for task 01: {round(perf_counter() - start_time),2} seconds")
