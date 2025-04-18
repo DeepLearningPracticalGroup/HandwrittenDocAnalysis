@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def IoU(boxA: np.ndarray, boxB: np.ndarray) -> float:
     """
     Measure the Intersection over Union between two bounding boxes
@@ -8,8 +9,8 @@ def IoU(boxA: np.ndarray, boxB: np.ndarray) -> float:
     """
     xA = np.maximum(boxA[0], boxB[0])
     yA = np.maximum(boxA[1], boxB[1])
-    xB = np.minimum(boxA[2], boxB[2])  
-    yB = np.minimum(boxA[3], boxB[3]) 
+    xB = np.minimum(boxA[2], boxB[2])
+    yB = np.minimum(boxA[3], boxB[3])
 
     inter_width = np.maximum(0, xB - xA)
     inter_height = np.maximum(0, yB - yA)
@@ -22,6 +23,6 @@ def IoU(boxA: np.ndarray, boxB: np.ndarray) -> float:
 
     # Avoid dividing by zero
     if union_area == 0:
-        return 0.0  
+        return 0.0
 
     return inter_area / union_area
