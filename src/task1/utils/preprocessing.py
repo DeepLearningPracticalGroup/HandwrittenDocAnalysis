@@ -114,3 +114,68 @@ def plot_image(image_path: str, title: str = "Image", cmap: str = None) -> None:
     plt.title(title)
     plt.axis('off')
     plt.show()
+
+
+
+
+
+def segment_lines(image_paths: list[str], save_dir: str = None, show_preview: bool = False) -> list[np.ndarray]:
+    """Segments an input image into horizontal text lines using contour detection after thresholding."""
+    all_lines = []
+    preview_lines = []
+
+    os.makedirs(save_dir, exist_ok=True) if save_dir else None
+
+    for img_idx, image_path in enumerate(image_paths):
+        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            print(f"Warning: Could not read image: {image_path}")
+            continue
+
+        _, img_bin = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+
+        # Sum of black pixels across rows
+        projection = np.sum(img_bin == 255, axis=1)
+
+        # Find where text lines exist
+        line_indices = []
+        in_line = False
+        for i, value in enumerate(projection):
+            if value > 0 and not in_line:
+                start = i
+                in_line = True
+            elif value == 0 and in_line:
+                end = i
+                in_line = False
+                line_indices.append((start, end))
+
+        for idx, (start, end) in enumerate(line_indices):
+            if (end - start) < 10:
+                continue  # skip tiny lines
+
+            line_img = img[start:end, :]
+            all_lines.append(line_img)
+
+            if save_dir:
+                filename = f"{os.path.splitext(os.path.basename(image_path))[0]}_line_{idx+1}.png"
+                save_path = os.path.join(save_dir, filename)
+                cv2.imwrite(save_path, line_img)
+
+            if show_preview and len(preview_lines) < 4:
+                preview_lines.append(line_img)
+
+    if show_preview and preview_lines:
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        fig.suptitle('First 4 Segmented Lines (Projection Profile)', fontsize=16)
+
+        for i in range(4):
+            ax = axes[i // 2, i % 2]
+            ax.imshow(preview_lines[i], cmap='gray')
+            ax.axis('off')
+            ax.set_title(f"Line {i+1}")
+
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        plt.show()
+
+    print(f"Segmented a total of {len(all_lines)} lines from {len(image_paths)} images.")
+    return all_lines

@@ -19,9 +19,10 @@ def main():
     image_path = "image-data"
 
     dataset = get_binarized_images(image_path)
-    plot_image(image_path=dataset[0])
+    
     # Image cleaning and denoising
-    clean_images_adaptive(dataset,show_preview=True)
+    lines = segment_lines(dataset,show_preview=True)
+
 
 
 
