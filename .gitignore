@@ -176,11 +176,12 @@ cython_debug/
 
 
 
-
+# git stuff
+.DS_Store
 
 ## Project specific
 
 /monkbrill/
-
-/test-image-data/
 /image-data/
+/synthetic_scrolls/
+/augmented/
