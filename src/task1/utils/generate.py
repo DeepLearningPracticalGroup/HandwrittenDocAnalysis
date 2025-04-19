@@ -2,11 +2,12 @@ import os
 import random
 import cv2
 import numpy as np
+from src.task1.utils.preprocessing import get_character_images
 
 
 def generate_synthetic_scroll(
     output_dir: str,
-    char_folders: list[str],
+    root_path: str,
     canvas_size: tuple[int, int] = (256, 1024),
     num_images: int = 100
 ) -> None:
@@ -20,11 +21,7 @@ def generate_synthetic_scroll(
     os.makedirs(image_dir, exist_ok=True)
 
     # Load all character images into a dictionary {class_name: [list of image paths]}
-    all_chars = {}
-    for char_folder in char_folders:
-        images = [os.path.join(char_folder, f) for f in os.listdir(char_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.pgm'))]
-        if images:
-            all_chars[char_folder] = images
+    all_chars = get_character_images(root_path)
 
     # Create a mapping from character name to class ID (needed for YOLO)
     char_to_id = {char: idx for idx, char in enumerate(sorted(all_chars.keys()))}

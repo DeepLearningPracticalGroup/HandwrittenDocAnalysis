@@ -2,9 +2,28 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+
+def get_character_images(root_path: str) -> dict[str, list[str]]:
+    """
+    Load all character images from subfolders into a dictionary.
+    """
+    all_chars = {}
+    # Loop over all subfolders inside root_path
+    for class_folder in os.listdir(root_path):
+        full_path = os.path.join(root_path, class_folder)
+        if os.path.isdir(full_path):
+            images = [
+                os.path.join(full_path, f) 
+                for f in os.listdir(full_path) 
+                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.pgm'))
+            ]
+            if images:
+                all_chars[class_folder] = images  # Use clean class name
+    return all_chars
 
 
-def get_images(image_path: str, endswith: str):
+def get_scroll_images(image_path: str, endswith: str):
     dataset = []
     for image in os.listdir(image_path):
         if image.endswith(endswith):
@@ -14,15 +33,15 @@ def get_images(image_path: str, endswith: str):
     return dataset
 
 
-def get_binarized_images(image_path):
-    return get_images(image_path=image_path, endswith="binarized.jpg")
+def get_binarized_scroll_images(image_path):
+    return get_scroll_images(image_path=image_path, endswith="binarized.jpg")
 
 
 def get_fused_images(image_path):
-    return get_images(image_path=image_path, endswith="fused.jpg")
+    return get_scroll_images(image_path=image_path, endswith="fused.jpg")
 
 
-def get_rgb_images(image_path):
+def get_rgb_scroll_images(image_path):
     dataset = []
     for image in os.listdir(image_path):
         if not image.endswith("binarized.jpg") and not image.endswith("fused.jpg"):
@@ -109,3 +128,19 @@ def clean_images_adaptive(
     return cleaned_paths
 
 
+
+
+def seperate_character_dataset(
+    char_dataset: dict[str, list[str]]
+) -> tuple[list[str], list[str]]:
+    """
+    Seperate a character dataset dictionary into parallel lists of image paths and labels.
+    """
+    image_paths = []
+    labels = []
+
+    for class_name, paths in char_dataset.items():
+        image_paths.extend(paths)
+        labels.extend([class_name] * len(paths))
+
+    return image_paths, labels

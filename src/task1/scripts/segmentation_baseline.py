@@ -24,7 +24,7 @@ def main():
 
     image_path = "image-data"
 
-    dataset = get_binarized_images(image_path)
+    dataset = get_binarized_scroll_images(image_path)
 
     # Image cleaning and denoising
     # boxes = cca_segmentation(dataset, plot=True)
