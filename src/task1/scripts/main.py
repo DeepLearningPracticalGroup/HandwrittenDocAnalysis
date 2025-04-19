@@ -46,6 +46,32 @@ def main():
     print(f"len of trainset: {len(X_char_train)}")
     print(f"len of valset: {len(X_char_val)}")
 
+
+    ## To Do's:
+
+    ## SEGMENTER TRAINING:
+
+    # Augmentation and merge to X_char_train and y_char_train...
+
+    # Generate training scrolls and validation scrolls from new X_char_train, y_char_train
+
+    # Train a segmenter with the training scrolls
+
+    # Tune the segmenter based on the validation scrolls
+
+    ## PREDICTOR TRAINING:
+
+    # Train a predictor model with X_char_train and y_char_train
+
+    # Tune the predictor using X_char_val and y_char_val
+
+    # Output: Make sure to map each 'English' label with its 'Hebrew' equivalent
+
+    ## FINAL PIPELINE
+
+    # Pass the test scrolls as inputs to the Segmenter and pass the Segmenter's outputs as inputs to the Predictor.
+
+
     ## Load test scrolls
 
     test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
