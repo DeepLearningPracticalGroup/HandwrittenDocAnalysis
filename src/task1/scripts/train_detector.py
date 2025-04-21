@@ -14,8 +14,13 @@ myenv/bin/ipython src/task1/scripts/main.py
 """
 
 from time import perf_counter
+import random
+import os
 from src.task1.utils.preprocessing import *
 from sklearn.model_selection import train_test_split
+from src.task1.utils.generate import generate_synthetic_scroll
+# Segmenter (YOLO)
+from ultralytics import YOLO
 
 
 def main():
@@ -46,6 +51,66 @@ def main():
     print(f"len of trainset: {len(X_char_train)}")
     print(f"len of valset: {len(X_char_val)}")
 
+    # Images to generate
+    num_train = 100
+    num_val = 50
+
+    # Generate training synthetic scrolls
+    X_scroll_train, y_scroll_train = generate_synthetic_scroll(
+    output_dir='synthetic_scrolls/train/',
+    char_paths = X_char_train,
+    char_labels = y_char_train,
+    canvas_size=(256, 1024),
+    num_images = num_train,
+    min_chars = 6,
+    max_chars = 12,
+    min_lines = 3,
+    max_lines = 8
+    )
+    # Call again to generate validation synthetic scrolls
+    # Also change the params a little bit for better generalization
+    X_scroll_val, y_scroll_val = generate_synthetic_scroll(
+    output_dir='synthetic_scrolls/val/',
+    char_paths = X_char_val,
+    char_labels = y_char_val,
+    canvas_size=(256, 1024),
+    num_images = num_val,
+    min_chars = 5,
+    max_chars = 15,
+    min_lines = 2,
+    max_lines = 10
+    )
+
+    # Load YoLo nano (YOLOv8)
+    ## It is a detector, meaning no need of two models in the pipeline
+    ## But if we need a segmenter first, we can get 'yolov8n-seg.pt'
+    model = YOLO('yolov8n.pt') 
+
+
+    # Detector model params
+    input_size = 640 # YOLO does the resize automatically
+    batch_size = 128
+    optimizer_name = 'SGD' # can also do 'Adam'
+    patience = 10
+    epochs = 4
+
+    # Fine-tune YOLO on scroll dataset:
+    ## YOLO will look at the YAML file where we specify the training and validation set
+    ## along with the labels
+    ### Best model weights will be stored inside runs/
+    model.train(
+        task = 'detect',
+        data='src/hebrew.yaml',
+        epochs=epochs,                
+        imgsz=input_size,                 
+        batch=batch_size,                  
+        patience=patience,                 
+        optimizer=optimizer_name,   
+        workers=1, 
+        save=True 
+    )
+
+
 
     ## To Do's:
 
@@ -74,7 +139,7 @@ def main():
 
     ## Load test scrolls
 
-    test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
+    #test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
 
     print(f"Running time for task 01: {round(perf_counter() - start_time,2)} seconds")
 

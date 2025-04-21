@@ -185,3 +185,6 @@ cython_debug/
 /image-data/
 /synthetic_scrolls/
 /augmented/
+*.pt
+/runs
+imagemorph
