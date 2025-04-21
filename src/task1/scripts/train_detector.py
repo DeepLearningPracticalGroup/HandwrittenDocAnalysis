@@ -27,59 +27,6 @@ def main():
 
     start_time = perf_counter()
 
-    # Data image paths
-    train_char_path = "monkbrill"
-    test_scroll_path = "image-data"
-
-    ## Load training characters
-
-    # Get a dictionary with character images
-    char_trainset_dict = get_character_images(root_path=train_char_path)
-    print(char_trainset_dict["Bet"][0])
-    # Seperate dataset into lists of image_paths and labels
-    X_char_train, y_char_train = seperate_character_dataset(char_trainset_dict)
-    print(f"First example: X = {X_char_train[0]}, Y={y_char_train[0]}")
-
-    # Split character trainset
-    X_char_train, X_char_val, y_char_train, y_char_val = train_test_split(
-        X_char_train,
-        y_char_train,
-        test_size=0.2,
-        random_state=42,
-        stratify=y_char_train,
-    )
-    print(f"len of trainset: {len(X_char_train)}")
-    print(f"len of valset: {len(X_char_val)}")
-
-    # Images to generate
-    num_train = 100
-    num_val = 50
-
-    # Generate training synthetic scrolls
-    X_scroll_train, y_scroll_train = generate_synthetic_scroll(
-    output_dir='synthetic_scrolls/train/',
-    char_paths = X_char_train,
-    char_labels = y_char_train,
-    canvas_size=(256, 1024),
-    num_images = num_train,
-    min_chars = 6,
-    max_chars = 12,
-    min_lines = 3,
-    max_lines = 8
-    )
-    # Call again to generate validation synthetic scrolls
-    # Also change the params a little bit for better generalization
-    X_scroll_val, y_scroll_val = generate_synthetic_scroll(
-    output_dir='synthetic_scrolls/val/',
-    char_paths = X_char_val,
-    char_labels = y_char_val,
-    canvas_size=(256, 1024),
-    num_images = num_val,
-    min_chars = 5,
-    max_chars = 15,
-    min_lines = 2,
-    max_lines = 10
-    )
 
     # Load YoLo nano (YOLOv8)
     ## It is a detector, meaning no need of two models in the pipeline

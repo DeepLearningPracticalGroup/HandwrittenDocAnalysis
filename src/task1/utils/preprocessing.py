@@ -2,7 +2,7 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import random
+import shutil
 
 def get_character_images(root_path: str) -> dict[str, list[str]]:
     """
@@ -144,3 +144,4 @@ def seperate_character_dataset(
         labels.extend([class_name] * len(paths))
 
     return image_paths, labels
+
