@@ -187,4 +187,3 @@ cython_debug/
 /augmented/
 *.pt
 /runs
-imagemorph
