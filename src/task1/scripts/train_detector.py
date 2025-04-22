@@ -6,11 +6,11 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/main.py
+ipython src/task1/scripts/train_detector.py
 or
-<env_name>/bin/ipython src/task1/scripts/main.py
+<env_name>/bin/ipython src/task1/scripts/train_detector.py
 or
-myenv/bin/ipython src/task1/scripts/main.py
+myenv/bin/ipython src/task1/scripts/train_detector.py
 """
 
 from time import perf_counter
@@ -35,11 +35,11 @@ def main():
 
 
     # Detector model params
-    input_size = 640 # YOLO does the resize automatically
+    input_size = 280 # YOLO does the resize automatically
     batch_size = 128
     optimizer_name = 'SGD' # can also do 'Adam'
-    patience = 10
-    epochs = 4
+    patience = 15
+    epochs = 200
 
     # Fine-tune YOLO on scroll dataset:
     ## YOLO will look at the YAML file where we specify the training and validation set

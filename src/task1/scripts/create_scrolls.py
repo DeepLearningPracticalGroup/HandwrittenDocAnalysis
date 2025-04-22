@@ -17,13 +17,17 @@ from time import perf_counter
 from src.task1.utils.preprocessing import get_character_images, seperate_character_dataset
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
-from src.task1.utils.data_augmentation import augment_dataset
+from src.task1.utils.data_augmentation import baseline_augmentation
 from ultralytics import YOLO
+import random
 
 
 def main():
 
     start_time = perf_counter()
+
+    # Ensure some degree of reproducibility
+    random.seed(20)
 
     # Data image paths
     train_char_path = "monkbrill"
@@ -49,17 +53,17 @@ def main():
     print(f"len of valset: {len(X_char_val)}")
 
     # Character Images to augment
-    augment_per_image = 3
+    augment_per_image = 2
 
     # Scroll Images to generate
-    num_train = 100
-    num_val = 50
+    num_train = 8000
+    num_val = 2000
 
     # Data augmentation
     augmented_dir = "augmented_dataset"
-    augmented_paths, augmented_labels = augment_dataset(
+    augmented_paths, augmented_labels = baseline_augmentation(
         X_char_train, y_char_train, augmented_dir,
-        augment_per_image=augment_per_image
+        num_augments=augment_per_image
     )
 
     # Append new augmented paths and labels
@@ -77,10 +81,10 @@ def main():
     char_labels = y_char_train_extended,
     canvas_size=(256, 1024),
     num_images = num_train,
-    min_chars = 6,
-    max_chars = 12,
+    min_chars = 5,
+    max_chars = 8,
     min_lines = 3,
-    max_lines = 8
+    max_lines = 6
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
@@ -91,9 +95,9 @@ def main():
     canvas_size=(256, 1024),
     num_images = num_val,
     min_chars = 5,
-    max_chars = 15,
+    max_chars = 10,
     min_lines = 2,
-    max_lines = 10
+    max_lines = 18
     )
 
 
