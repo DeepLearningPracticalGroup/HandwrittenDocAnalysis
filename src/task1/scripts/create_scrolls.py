@@ -6,11 +6,14 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/create_scrolls.py
+ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
-<env_name>/bin/ipython src/task1/scripts/create_scrolls.py
+<env_name>/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
-myenv/bin/ipython src/task1/scripts/create_scrolls.py
+myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 """
 
 from time import perf_counter
@@ -20,17 +23,23 @@ from src.task1.utils.generate import generate_synthetic_scroll
 from src.task1.utils.data_augmentation import baseline_augmentation
 from ultralytics import YOLO
 import random
+import argparse
 
 
-def main():
+def main(
+    train_char_path: str,
+    augmented_char_path: str,
+    char_val_size: int,
+    augment_per_char: int,
+    num_train_scrolls: int,
+    num_val_scrolls: int,   
+
+):
 
     start_time = perf_counter()
 
     # Ensure some degree of reproducibility
     random.seed(20)
-
-    # Data image paths
-    train_char_path = "monkbrill"
 
     ## Load training characters
 
@@ -45,25 +54,17 @@ def main():
     X_char_train, X_char_val, y_char_train, y_char_val = train_test_split(
         X_char_train,
         y_char_train,
-        test_size=0.2,
+        test_size=char_val_size,
         random_state=42,
         stratify=y_char_train,
     )
     print(f"len of trainset: {len(X_char_train)}")
     print(f"len of valset: {len(X_char_val)}")
 
-    # Character Images to augment
-    augment_per_image = 2
-
-    # Scroll Images to generate
-    num_train = 8000
-    num_val = 2000
-
     # Data augmentation
-    augmented_dir = "augmented_dataset"
     augmented_paths, augmented_labels = baseline_augmentation(
-        X_char_train, y_char_train, augmented_dir,
-        num_augments=augment_per_image
+        X_char_train, y_char_train, augmented_char_path,
+        num_augments=augment_per_char
     )
 
     # Append new augmented paths and labels
@@ -80,7 +81,7 @@ def main():
     char_paths = X_char_train_extended,
     char_labels = y_char_train_extended,
     canvas_size=(256, 1024),
-    num_images = num_train,
+    num_images = num_train_scrolls,
     min_chars = 5,
     max_chars = 8,
     min_lines = 3,
@@ -93,7 +94,7 @@ def main():
     char_paths = X_char_val,
     char_labels = y_char_val,
     canvas_size=(256, 1024),
-    num_images = num_val,
+    num_images = num_val_scrolls,
     min_chars = 5,
     max_chars = 10,
     min_lines = 2,
@@ -134,4 +135,22 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser(description="Create synthetic scrolls for DSS dataset.")
+    parser.add_argument("--train_char_path", type=str, required=True, help="Path to the training character dataset.")
+    parser.add_argument("--augmented_char_path", type=str, required=True, help="Path to save augmented character dataset.")
+    parser.add_argument("--char_val_size", type=float, default=0.2, help="Proportion of the character dataset to include in the validation split.")
+    parser.add_argument("--augment_per_char", type=int, default=2, help="Number of augmentations per character image.")
+    parser.add_argument("--num_train_scrolls", type=int, default=8000, help="Number of synthetic scrolls to generate for training.")
+    parser.add_argument("--num_val_scrolls", type=int, default=2000, help="Number of synthetic scrolls to generate for validation.")
+    args = parser.parse_args()
+
+    main(
+        train_char_path=args.train_char_path,
+        augmented_char_path=args.augmented_char_path,
+        char_val_size=args.char_val_size,
+        augment_per_char=args.augment_per_char,
+        num_train_scrolls=args.num_train_scrolls,
+        num_val_scrolls=args.num_val_scrolls,
+    )
+
