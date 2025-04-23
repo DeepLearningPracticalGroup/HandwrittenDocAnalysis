@@ -13,7 +13,7 @@ or
 --batch_size 128 --optimizer 'SGD' --patience 15 --epochs 200 --workers 1
 or
 myenv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
---batch_size 128 --optimizer 'SGD' --patience 15 --epochs 200 --workers 1
+--batch_size 128 --optimizer 'SGD' --patience 15 --epochs 2 --workers 1
 """
 
 from time import perf_counter

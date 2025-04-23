@@ -180,7 +180,8 @@ cython_debug/
 .DS_Store
 
 ## Project specific
-
+*.png
+*.jpg
 /monkbrill/
 /image-data/
 /synthetic_scrolls/
