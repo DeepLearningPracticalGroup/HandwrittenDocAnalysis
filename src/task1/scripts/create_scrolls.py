@@ -17,7 +17,10 @@ myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monk
 """
 
 from time import perf_counter
-from src.task1.utils.preprocessing import get_character_images, seperate_character_dataset
+from src.task1.utils.preprocessing import (
+    get_character_images,
+    seperate_character_dataset,
+)
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
 from src.task1.utils.data_augmentation import baseline_augmentation
@@ -32,8 +35,7 @@ def main(
     char_val_size: int,
     augment_per_char: int,
     num_train_scrolls: int,
-    num_val_scrolls: int,   
-
+    num_val_scrolls: int,
 ):
 
     start_time = perf_counter()
@@ -63,8 +65,7 @@ def main(
 
     # Data augmentation
     augmented_paths, augmented_labels = baseline_augmentation(
-        X_char_train, y_char_train, augmented_char_path,
-        num_augments=augment_per_char
+        X_char_train, y_char_train, augmented_char_path, num_augments=augment_per_char
     )
 
     # Append new augmented paths and labels
@@ -74,33 +75,31 @@ def main(
     print(f"Original training set size: {len(X_char_train)}")
     print(f"Augmented training set size: {len(X_char_train_extended)}")
 
-
     # Generate training synthetic scrolls
     X_scroll_train, y_scroll_train = generate_synthetic_scroll(
-    output_dir='synthetic_scrolls/train/',
-    char_paths = X_char_train_extended,
-    char_labels = y_char_train_extended,
-    canvas_size=(256, 1024),
-    num_images = num_train_scrolls,
-    min_chars = 5,
-    max_chars = 8,
-    min_lines = 3,
-    max_lines = 6
+        output_dir="synthetic_scrolls/train/",
+        char_paths=X_char_train_extended,
+        char_labels=y_char_train_extended,
+        canvas_size=(256, 1024),
+        num_images=num_train_scrolls,
+        min_chars=5,
+        max_chars=8,
+        min_lines=3,
+        max_lines=6,
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
     X_scroll_val, y_scroll_val = generate_synthetic_scroll(
-    output_dir='synthetic_scrolls/val/',
-    char_paths = X_char_val,
-    char_labels = y_char_val,
-    canvas_size=(256, 1024),
-    num_images = num_val_scrolls,
-    min_chars = 5,
-    max_chars = 10,
-    min_lines = 2,
-    max_lines = 18
+        output_dir="synthetic_scrolls/val/",
+        char_paths=X_char_val,
+        char_labels=y_char_val,
+        canvas_size=(256, 1024),
+        num_images=num_val_scrolls,
+        min_chars=5,
+        max_chars=10,
+        min_lines=2,
+        max_lines=18,
     )
-
 
     ## To Do's: (only if we want different segmenter and detector)
 
@@ -126,23 +125,54 @@ def main(
 
     # Pass the test scrolls as inputs to the Segmenter and pass the Segmenter's outputs as inputs to the Predictor.
 
-
     ## Load test scrolls
 
-    #test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
+    # test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
 
     print(f"Running time for task 01: {round(perf_counter() - start_time,2)} seconds")
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Create synthetic scrolls for DSS dataset.")
-    parser.add_argument("--train_char_path", type=str, required=True, help="Path to the training character dataset.")
-    parser.add_argument("--augmented_char_path", type=str, required=True, help="Path to save augmented character dataset.")
-    parser.add_argument("--char_val_size", type=float, default=0.2, help="Proportion of the character dataset to include in the validation split.")
-    parser.add_argument("--augment_per_char", type=int, default=2, help="Number of augmentations per character image.")
-    parser.add_argument("--num_train_scrolls", type=int, default=8000, help="Number of synthetic scrolls to generate for training.")
-    parser.add_argument("--num_val_scrolls", type=int, default=2000, help="Number of synthetic scrolls to generate for validation.")
+    parser = argparse.ArgumentParser(
+        description="Create synthetic scrolls for DSS dataset."
+    )
+    parser.add_argument(
+        "--train_char_path",
+        type=str,
+        required=True,
+        help="Path to the training character dataset.",
+    )
+    parser.add_argument(
+        "--augmented_char_path",
+        type=str,
+        required=True,
+        help="Path to save augmented character dataset.",
+    )
+    parser.add_argument(
+        "--char_val_size",
+        type=float,
+        default=0.2,
+        help="Proportion of the character dataset to include in the validation split.",
+    )
+    parser.add_argument(
+        "--augment_per_char",
+        type=int,
+        default=2,
+        help="Number of augmentations per character image.",
+    )
+    parser.add_argument(
+        "--num_train_scrolls",
+        type=int,
+        default=8000,
+        help="Number of synthetic scrolls to generate for training.",
+    )
+    parser.add_argument(
+        "--num_val_scrolls",
+        type=int,
+        default=2000,
+        help="Number of synthetic scrolls to generate for validation.",
+    )
     args = parser.parse_args()
 
     main(
@@ -153,4 +183,3 @@ if __name__ == "__main__":
         num_train_scrolls=args.num_train_scrolls,
         num_val_scrolls=args.num_val_scrolls,
     )
-

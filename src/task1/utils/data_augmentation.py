@@ -9,7 +9,6 @@ import torchvision.transforms.functional as F
 import random
 
 
-
 class RandomResize(object):
     def __init__(self, scale_range=(0.95, 1.05)):
         self.scale_range = scale_range
@@ -36,9 +35,15 @@ class RandomResize(object):
         return img
 
 
-
-def imagemorph_augmentation(image_paths, labels, output_dir, morph_exec="./imagemorph",
-                    augment_per_image=1, alpha="0.9", kernel_size="9"):
+def imagemorph_augmentation(
+    image_paths,
+    labels,
+    output_dir,
+    morph_exec="./imagemorph",
+    augment_per_image=1,
+    alpha="0.9",
+    kernel_size="9",
+):
 
     os.makedirs(output_dir, exist_ok=True)
     augmented_paths, augmented_labels = [], []
@@ -64,7 +69,7 @@ def imagemorph_augmentation(image_paths, labels, output_dir, morph_exec="./image
                     [morph_exec, alpha, kernel_size],
                     input=ppm_buffer.getvalue(),
                     stdout=fout,
-                    stderr=subprocess.DEVNULL
+                    stderr=subprocess.DEVNULL,
                 )
 
             augmented_paths.append(output_image_path)
@@ -78,7 +83,7 @@ def imagemorph_augmentation(image_paths, labels, output_dir, morph_exec="./image
 def baseline_augmentation(image_paths, labels, output_dir, num_augments=3, seed=42):
     """
     Applies augmentations to the given dataset of character images.
-    
+
     Parameters:
     - image_paths: List of paths to original images
     - labels: List of corresponding labels (same length as image_paths)
@@ -92,19 +97,23 @@ def baseline_augmentation(image_paths, labels, output_dir, num_augments=3, seed=
     os.makedirs(output_dir, exist_ok=True)
     random.seed(seed)
 
-    augmentation_pipeline = transforms.Compose([
-        RandomResize(scale_range=(0.95, 1.05)),
-        transforms.RandomAffine(degrees=8),
-        transforms.ToTensor(),
-        transforms.ToPILImage(),
-    ])
+    augmentation_pipeline = transforms.Compose(
+        [
+            RandomResize(scale_range=(0.95, 1.05)),
+            transforms.RandomAffine(degrees=8),
+            transforms.ToTensor(),
+            transforms.ToPILImage(),
+        ]
+    )
 
     augmented_image_paths = []
     augmented_labels = []
 
-    for img_path, label in tqdm(zip(image_paths, labels), total=len(image_paths), desc="Augmenting dataset"):
+    for img_path, label in tqdm(
+        zip(image_paths, labels), total=len(image_paths), desc="Augmenting dataset"
+    ):
         try:
-            img = Image.open(img_path).convert('L')  # grayscale
+            img = Image.open(img_path).convert("L")  # grayscale
         except Exception as e:
             print(f"Failed to open {img_path}: {e}")
             continue

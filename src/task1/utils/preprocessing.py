@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 
+
 def get_character_images(root_path: str) -> dict[str, list[str]]:
     """
     Load all character images from subfolders into a dictionary.
@@ -14,9 +15,9 @@ def get_character_images(root_path: str) -> dict[str, list[str]]:
         full_path = os.path.join(root_path, class_folder)
         if os.path.isdir(full_path):
             images = [
-                os.path.join(full_path, f) 
-                for f in os.listdir(full_path) 
-                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.pgm'))
+                os.path.join(full_path, f)
+                for f in os.listdir(full_path)
+                if f.lower().endswith((".png", ".jpg", ".jpeg", ".pgm"))
             ]
             if images:
                 all_chars[class_folder] = images  # Use clean class name
@@ -128,10 +129,8 @@ def clean_images_adaptive(
     return cleaned_paths
 
 
-
-
 def seperate_character_dataset(
-    char_dataset: dict[str, list[str]]
+    char_dataset: dict[str, list[str]],
 ) -> tuple[list[str], list[str]]:
     """
     Seperate a character dataset dictionary into parallel lists of image paths and labels.
@@ -144,4 +143,3 @@ def seperate_character_dataset(
         labels.extend([class_name] * len(paths))
 
     return image_paths, labels
-
