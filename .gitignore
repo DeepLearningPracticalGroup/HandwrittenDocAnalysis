@@ -188,3 +188,4 @@ cython_debug/
 *.pt
 /runs
 /augmented_dataset
+/augmented_chars
