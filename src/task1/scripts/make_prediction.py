@@ -5,11 +5,11 @@ myenv/bin/ipython src/task1/scripts/make_prediction.py -- \
 
 """
 
-
 import argparse
 from ultralytics import YOLO
 import cv2
 import torch
+
 
 def visualize_and_read(results, label_names):
     # Visualize results
@@ -26,7 +26,15 @@ def visualize_and_read(results, label_names):
             label = label_names[int(cls)]
             predictions.append((x1, label, conf))
             cv2.rectangle(im, (x1, y1), (x2, y2), (255, 0, 0), 2)
-            cv2.putText(im, f"{label} {conf:.2f}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.putText(
+                im,
+                f"{label} {conf:.2f}",
+                (x1, y1 - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2,
+            )
 
         # Sort predictions left-to-right (based on x1)
         predictions.sort(key=lambda tup: tup[0])
@@ -36,24 +44,48 @@ def visualize_and_read(results, label_names):
         # Show and save the visualization
         output_path = "output_scroll_prediction.png"
         cv2.imwrite(output_path, im)
-        print(f"📸 Saved annotated image to {output_path}")
+        print(f"Saved annotated image to {output_path}")
 
-def main(model_path, image_path):
+
+def main(model_path: str, image_path: str, confidence: float):
     print(f"🔍 Loading model from: {model_path}")
     model = YOLO(model_path)
 
     print(f"Predicting on image: {image_path}")
-    results = model.predict(source=image_path, conf=0.25, save=False)
+    results = model.predict(source=image_path, conf=confidence, save=False)
 
     # Get label names from model
     label_names = model.names  # dict: {0: 'A', 1: 'B', ...}
-    
+
     visualize_and_read(results, label_names)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Predict characters from a scroll image using a trained YOLO model.")
-    parser.add_argument("--model_path", type=str, required=True, help="Path to trained YOLO model (e.g., best.pt)")
-    parser.add_argument("--image_path", type=str, required=True, help="Path to scroll image for prediction")
+    parser = argparse.ArgumentParser(
+        description="Predict characters from a scroll image using a trained YOLO model."
+    )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        required=True,
+        help="Path to trained YOLO model (e.g., best.pt)",
+    )
+    parser.add_argument(
+        "--image_path",
+        type=str,
+        required=True,
+        help="Path to scroll image for prediction.",
+    )
+    parser.add_argument(
+        "--confidence",
+        type=float,
+        default=0.25,
+        help="Confidence threshold for predictions.",
+    )
 
     args = parser.parse_args()
-    main(args.model_path, args.image_path)
+    main(
+        model_path=args.model_path,
+        image_path=args.image_path,
+        confidence=args.confidence,
+    )
