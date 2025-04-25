@@ -1,7 +1,8 @@
 """
 myenv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train4/weights/best.pt" \
---image_path "image-data/P123-Fg002-R-C01-R01-binarized.jpg"
+--model_path "runs/detect/train7/weights/best.pt" \
+--image_path "image-data/P123-Fg002-R-C01-R01-binarized.jpg" \
+--confidence 0.10
 
 """
 

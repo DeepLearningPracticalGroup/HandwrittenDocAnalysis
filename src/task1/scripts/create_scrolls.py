@@ -13,7 +13,7 @@ or
 --augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
 myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
+--augment_per_char 4 --num_train_scrolls 10 --num_val_scrolls 10
 """
 
 from time import perf_counter
@@ -23,7 +23,7 @@ from src.task1.utils.preprocessing import (
 )
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
-from src.task1.utils.data_augmentation import baseline_augmentation
+from src.task1.utils.data_augmentation import baseline_augmentation, imagemorph_augmentation
 from ultralytics import YOLO
 import random
 import argparse
@@ -64,7 +64,7 @@ def main(
     print(f"len of valset: {len(X_char_val)}")
 
     # Data augmentation
-    augmented_paths, augmented_labels = baseline_augmentation(
+    augmented_paths, augmented_labels = imagemorph_augmentation(
         X_char_train, y_char_train, augmented_char_path, num_augments=augment_per_char
     )
 
