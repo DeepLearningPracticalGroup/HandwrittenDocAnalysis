@@ -5,6 +5,38 @@ import numpy as np
 from src.task1.utils.preprocessing import get_character_images
 import yaml
 
+def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
+    if random.random() > prob:
+        return scroll_img
+
+    h, w = scroll_img.shape
+    noise_files = [f for f in os.listdir(noise_maps_dir) if f.endswith((".png", ".jpg", ".jpeg"))]
+    if not noise_files:
+        return scroll_img
+
+    max_attempts = 10
+    for _ in range(max_attempts):
+        noise_path = os.path.join(noise_maps_dir, random.choice(noise_files))
+        noise_img = cv2.imread(noise_path, cv2.IMREAD_GRAYSCALE)
+
+        if noise_img is None or noise_img.shape[0] < h or noise_img.shape[1] < w:
+            continue
+
+        y = random.randint(0, noise_img.shape[0] - h)
+        x = random.randint(0, noise_img.shape[1] - w)
+        noise_crop = noise_img[y:y+h, x:x+w]
+
+        mean_val = np.mean(noise_crop)
+        if 30 <= mean_val <= 240:
+            break
+    else:
+        return scroll_img
+
+    mask = (noise_crop == 0).astype(np.uint8)
+    damaged_scroll = scroll_img.copy()
+    damaged_scroll[mask == 1] = 255
+
+    return damaged_scroll
 
 def generate_synthetic_scroll(
     output_dir: str,
@@ -101,6 +133,7 @@ def generate_synthetic_scroll(
         img_path = os.path.join(image_dir, img_name)
         label_path = os.path.join(label_dir, label_name)
 
+        canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/noise_maps_binarized")
         cv2.imwrite(os.path.join(image_dir, img_name), canvas)
         with open(os.path.join(label_dir, label_name), "w") as f:
             f.write("\n".join(labels))

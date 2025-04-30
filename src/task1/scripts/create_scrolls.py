@@ -23,11 +23,10 @@ from src.task1.utils.preprocessing import (
 )
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
-from src.task1.utils.data_augmentation import baseline_augmentation, imagemorph_augmentation
+from src.task1.utils.data_augmentation_2 import imagemorph_augmentation
 from ultralytics import YOLO
 import random
 import argparse
-
 
 def main(
     train_char_path: str,
@@ -65,7 +64,7 @@ def main(
 
     # Data augmentation
     augmented_paths, augmented_labels = imagemorph_augmentation(
-        X_char_train, y_char_train, augmented_char_path, num_augments=augment_per_char
+        X_char_train, y_char_train, augmented_char_path, augment_per_image=augment_per_char
     )
 
     # Append new augmented paths and labels

@@ -2,8 +2,8 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import shutil
-
+from PIL import Image
+from glob import glob
 
 def get_character_images(root_path: str) -> dict[str, list[str]]:
     """
@@ -143,3 +143,27 @@ def seperate_character_dataset(
         labels.extend([class_name] * len(paths))
 
     return image_paths, labels
+
+def binarize_image(input_path, output_path, threshold=200):
+    img = Image.open(input_path)
+
+    # If the image is in RGBA mode, convert it to RGB
+    if img.mode == "RGBA":
+        img_np = np.array(img)
+        r, g, b, a = img_np[:, :, 0], img_np[:, :, 1], img_np[:, :, 2], img_np[:, :, 3]
+
+        # Convert to grayscale using the luminosity method
+        gray = (0.299 * r + 0.587 * g + 0.114 * b).astype(np.uint8)
+
+        # Create a binary mask based on the alpha channel
+        binary = np.where((a > 0) & (gray < threshold), 0, 255).astype(np.uint8)
+
+    else:
+        # Image is in RGB or grayscale mode
+        gray = img.convert("L")
+        gray_np = np.array(gray)
+        binary = np.where(gray_np < threshold, 0, 255).astype(np.uint8)
+
+    bin_img = Image.fromarray(binary, mode='L')
+    bin_img.save(output_path)
+    return bin_img
