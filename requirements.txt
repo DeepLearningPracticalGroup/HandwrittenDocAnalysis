@@ -11,6 +11,7 @@ scipy
 seaborn
 torch
 torchvision
+#transformers
 tqdm
 ultralytics
 

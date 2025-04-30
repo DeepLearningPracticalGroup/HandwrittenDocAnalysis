@@ -8,7 +8,7 @@ def img_visualization(img_path):
     if img is None:
         print("Image not loaded.")
         return
-
+    
     plt.imshow(img, cmap="gray")
     plt.axis("off")
     plt.show()

@@ -6,14 +6,14 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
+ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 800 
 or
-<env_name>/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
+<env_name>/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 800 
 or
-myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 10 --num_val_scrolls 10
+myenv/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 
 """
 
 from time import perf_counter
@@ -22,7 +22,7 @@ from src.task1.utils.preprocessing import (
     seperate_character_dataset,
 )
 from sklearn.model_selection import train_test_split
-from src.task1.utils.generate import generate_synthetic_scroll
+from src.task1.utils.generate import generate_bible_scroll
 from src.task1.utils.data_augmentation import baseline_augmentation, imagemorph_augmentation
 from ultralytics import YOLO
 import random
@@ -34,8 +34,6 @@ def main(
     augmented_char_path: str,
     char_val_size: int,
     augment_per_char: int,
-    num_train_scrolls: int,
-    num_val_scrolls: int,
 ):
 
     start_time = perf_counter()
@@ -76,29 +74,14 @@ def main(
     print(f"Augmented training set size: {len(X_char_train_extended)}")
 
     # Generate training synthetic scrolls
-    X_scroll_train, y_scroll_train = generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/train/",
+    X_scroll_train, y_scroll_train = generate_bible_scroll(
+        bible_path="src/bible.txt",
+        yaml_file_path="src/hebrew.yaml",
+        output_dir="bible_scrolls/train/",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(256, 1024),
-        num_images=num_train_scrolls,
-        min_chars=5,
-        max_chars=8,
-        min_lines=3,
-        max_lines=6,
-    )
-    # Call again to generate validation synthetic scrolls
-    # Also change the params a little bit for better generalization
-    X_scroll_val, y_scroll_val = generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/val/",
-        char_paths=X_char_val,
-        char_labels=y_char_val,
-        canvas_size=(256, 1024),
-        num_images=num_val_scrolls,
-        min_chars=5,
-        max_chars=10,
-        min_lines=2,
-        max_lines=18,
+        max_lines=20,
     )
 
     ## To Do's: (only if we want different segmenter and detector)
@@ -161,18 +144,7 @@ if __name__ == "__main__":
         default=2,
         help="Number of augmentations per character image.",
     )
-    parser.add_argument(
-        "--num_train_scrolls",
-        type=int,
-        default=8000,
-        help="Number of synthetic scrolls to generate for training.",
-    )
-    parser.add_argument(
-        "--num_val_scrolls",
-        type=int,
-        default=2000,
-        help="Number of synthetic scrolls to generate for validation.",
-    )
+
     args = parser.parse_args()
 
     main(
@@ -180,6 +152,4 @@ if __name__ == "__main__":
         augmented_char_path=args.augmented_char_path,
         char_val_size=args.char_val_size,
         augment_per_char=args.augment_per_char,
-        num_train_scrolls=args.num_train_scrolls,
-        num_val_scrolls=args.num_val_scrolls,
     )

@@ -211,3 +211,9 @@ def projection_segmentation_auto(
             plt.show()
 
     return all_bboxes
+
+
+
+
+
+

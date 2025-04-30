@@ -91,7 +91,6 @@ def baseline_augmentation(image_paths, labels, output_dir, num_augments=3, seed=
     - num_augments: Number of augmented versions to generate per image
     - image_size: Output image size as tuple
     - seed: For reproducibility
-
     """
 
     os.makedirs(output_dir, exist_ok=True)

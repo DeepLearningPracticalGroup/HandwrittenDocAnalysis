@@ -190,3 +190,4 @@ cython_debug/
 /runs
 /augmented_dataset
 /augmented_chars
+/bible_scrolls
