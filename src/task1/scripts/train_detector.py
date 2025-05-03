@@ -12,16 +12,14 @@ or
 <env_name>/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
 --batch_size 128 --optimizer 'SGD' --patience 15 --epochs 200 --workers 1
 or
-myenv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
---batch_size 128 --optimizer 'SGD' --patience 15 --epochs 2 --workers 1
+.venv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
+--batch_size 128 --optimizer 'SGD' --patience 15 --epochs 1 --workers 1
 """
 
 from time import perf_counter
 from src.task1.utils.preprocessing import *
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
-
-# Segmenter (YOLO)
 from ultralytics import YOLO
 import argparse
 
