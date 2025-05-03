@@ -6,14 +6,14 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 
 or
-<env_name>/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+<env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 
 or
-.venv/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 
+.venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 2
 """
 
 from time import perf_counter
@@ -22,9 +22,8 @@ from src.task1.utils.preprocessing import (
     seperate_character_dataset,
 )
 from sklearn.model_selection import train_test_split
-from src.task1.utils.generate import generate_bible_scroll
+from src.task1.utils.generate import generate_file_scroll
 from src.task1.utils.data_augmentation import (
-    baseline_augmentation,
     imagemorph_augmentation,
 )
 from ultralytics import YOLO
@@ -66,7 +65,7 @@ def main(
 
     # Data augmentation
     augmented_paths, augmented_labels = imagemorph_augmentation(
-        X_char_train, y_char_train, augmented_char_path, num_augments=augment_per_char
+        image_paths=X_char_train, labels=y_char_train, output_dir=augmented_char_path, augment_per_image=augment_per_char
     )
 
     # Append new augmented paths and labels
@@ -76,27 +75,41 @@ def main(
     print(f"Original training set size: {len(X_char_train)}")
     print(f"Augmented training set size: {len(X_char_train_extended)}")
 
-    # Generate training synthetic scrolls
-    X_scroll_train, y_scroll_train = generate_bible_scroll(
-        bible_path="src/bible_train.txt",
+    # Generate training synthetic scrolls from bible text
+    generate_file_scroll(
+        file_path="src/bible_train.txt",
         yaml_file_path="src/hebrew.yaml",
-        output_dir="bible_scrolls/train/",
+        output_dir="generated_scrolls/train/bible_scrolls",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(256, 1024),
         max_lines=20,
+        noise_prob=0.75,
     )
 
-    # Generate validation synthetic scrolls
-    X_scroll_val, y_scroll_val = generate_bible_scroll(
-        bible_path="src/bible_val.txt",
+    # Generate validation synthetic scrolls from bible text
+    generate_file_scroll(
+        file_path="src/bible_val.txt",
         yaml_file_path="src/hebrew.yaml",
-        output_dir="bible_scrolls/val/",
+        output_dir="generated_scrolls/val/bible_scrolls",
         char_paths=X_char_val,
         char_labels=y_char_val,
         canvas_size=(256, 1024),
         max_lines=20,
     )
+
+    # Generate training synthetic scrolls from translated aesop fables text
+    generate_file_scroll(
+        file_path="src/text_files/hebrew_text/aesops_fables.txt",
+        yaml_file_path="src/hebrew.yaml",
+        output_dir="generated_scrolls/train/aesops_scrolls",
+        char_paths=X_char_train_extended,
+        char_labels=y_char_train_extended,
+        canvas_size=(256, 1024),
+        max_lines=20,
+        noise_prob=0.75,
+    )
+
 
     ## To Do's: (only if we want different segmenter and detector)
 

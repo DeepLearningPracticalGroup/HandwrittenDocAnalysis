@@ -2,8 +2,8 @@ import os
 import random
 import cv2
 import numpy as np
-from src.task1.utils.preprocessing import get_character_images
-import yaml
+
+
 
 def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
     if random.random() > prob:
@@ -48,9 +48,12 @@ def generate_synthetic_scroll(
     max_chars: int = 20,
     min_lines: int = 2,
     max_lines: int = 10,
+    noise_prob: float = 0,
 ) -> tuple[list[str], list[str]]:
     """
     Generate synthetic scroll-like images with multiple lines by pasting character images onto a blank canvas.
+
+    Also adds noise maps to the generated images.
     """
     label_dir = os.path.join(output_dir, "labels")
     image_dir = os.path.join(output_dir, "images")
@@ -133,7 +136,8 @@ def generate_synthetic_scroll(
         img_path = os.path.join(image_dir, img_name)
         label_path = os.path.join(label_dir, label_name)
 
-        canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/noise_maps_binarized")
+        if noise_prob > 0:
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/", prob=noise_prob)
         cv2.imwrite(os.path.join(image_dir, img_name), canvas)
         with open(os.path.join(label_dir, label_name), "w") as f:
             f.write("\n".join(labels))
@@ -143,31 +147,37 @@ def generate_synthetic_scroll(
 
     return image_paths, label_paths
 
-
-def generate_bible_scroll(
-        bible_path: str,
-        yaml_file_path: str,
-        output_dir: str,
-        char_paths: list[str],
-        char_labels: list[str],
-        canvas_size: tuple[int, int] = (512, 1024),
-        max_lines: int = 20,
-        line_spacing: int = 10,
-    ) -> tuple[list[str], list[str]]:
+def generate_file_scroll(
+    file_path: str,
+    yaml_file_path: str,
+    output_dir: str,
+    char_paths: list[str],
+    char_labels: list[str],
+    canvas_size: tuple[int, int] = (512, 1024),
+    max_lines: int = 20,
+    line_spacing: int = 10,
+    noise_prob: float = 0,
+) -> tuple[list[str], list[str]]:
     """
-    Generate scroll images from the Bible text, keeping only Hebrew characters 
+    Generate scroll images from a text file, keeping only Hebrew characters 
     as specified in the 'converted' dictionary from hebrew.yaml.
-    Adds visual space between words when space characters are present.
+    Properly handles right-to-left (RTL) rendering for Hebrew.
     """
+    import os
+    import yaml
+    import numpy as np
+    import cv2
+    import random
+
     # Load Hebrew characters and mapping from YAML
     with open(yaml_file_path, "r", encoding="utf-8") as f:
         hebrew_data = yaml.safe_load(f)
         converted = hebrew_data["converted"]
         hebrew_chars = set(converted.keys())
 
-    # Read and filter Bible text (keep Hebrew chars and spaces only)
-    with open(bible_path, "r", encoding="utf-8") as f:
-        bible_text = "".join([char for char in f.read() if char in hebrew_chars or char == " "])
+    # Read and filter file text (keep Hebrew chars and spaces only)
+    with open(file_path, "r", encoding="utf-8") as f:
+        file_text = "".join([char for char in f.read() if char in hebrew_chars or char == " "])
 
     # Map label names to their image paths
     char_to_path = {label: path for path, label in zip(char_paths, char_labels)}
@@ -185,16 +195,14 @@ def generate_bible_scroll(
     os.makedirs(image_dir, exist_ok=True)
 
     unique_classes = sorted(set(char_labels))
-    print(f"Unique classes: {unique_classes}")
     char_to_id = {char: idx for idx, char in enumerate(unique_classes)}
-    print(f"Character to ID mapping: {char_to_id}")
 
     image_paths = []
     label_paths = []
 
     lines = []
     current_line = ""
-    for char in bible_text:
+    for char in file_text:
         if char in hebrew_char_to_path or char == " ":
             current_line += char
             if len(current_line) >= canvas_size[1] // 20:
@@ -212,12 +220,12 @@ def generate_bible_scroll(
         y_cursor = 20
         for _ in range(min(max_lines, len(lines))):
             line = lines.pop(0)
-            x_cursor = 20
+            x_cursor = canvas_size[1] - 20  # start from right for RTL
             line_y_offset = random.randint(-5, 5)
 
-            for char in line:
+            for char in reversed(line):  # reverse for RTL
                 if char == " ":
-                    x_cursor += random.randint(10, 30)  # add spacing for space
+                    x_cursor -= random.randint(10, 30)
                     continue
 
                 if char not in hebrew_char_to_path:
@@ -231,7 +239,7 @@ def generate_bible_scroll(
 
                 h, w = char_img.shape
 
-                if x_cursor + w >= canvas_size[1] - 20:
+                if x_cursor - w <= 20:
                     break
 
                 if y_cursor + h >= canvas_size[0] - 20:
@@ -239,17 +247,17 @@ def generate_bible_scroll(
 
                 canvas[
                     y_cursor + line_y_offset : y_cursor + h + line_y_offset,
-                    x_cursor : x_cursor + w,
+                    x_cursor - w : x_cursor,
                 ] = np.minimum(
                     canvas[
                         y_cursor + line_y_offset : y_cursor + h + line_y_offset,
-                        x_cursor : x_cursor + w,
+                        x_cursor - w : x_cursor,
                     ],
                     char_img,
                 )
 
                 label_name = converted[char]
-                x_center = (x_cursor + w / 2) / canvas_size[1]
+                x_center = (x_cursor - w / 2) / canvas_size[1]
                 y_center = (y_cursor + line_y_offset + h / 2) / canvas_size[0]
                 width = w / canvas_size[1]
                 height = h / canvas_size[0]
@@ -257,15 +265,18 @@ def generate_bible_scroll(
                     f"{char_to_id[label_name]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
                 )
 
-                x_cursor += w + random.randint(5, 20)
+                x_cursor -= w + random.randint(5, 20)  # move leftward
 
             y_cursor += h + line_spacing
 
-        img_name = f"bible_scroll_{scroll_idx:04d}.png"
-        label_name = f"bible_scroll_{scroll_idx:04d}.txt"
+        img_name = f"file_scroll_{scroll_idx:04d}.png"
+        label_name = f"file_scroll_{scroll_idx:04d}.txt"
 
         img_path = os.path.join(image_dir, img_name)
         label_path = os.path.join(label_dir, label_name)
+
+        if noise_prob > 0:
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/", prob=noise_prob)
 
         cv2.imwrite(img_path, canvas)
         with open(label_path, "w") as f:
