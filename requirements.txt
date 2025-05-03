@@ -9,9 +9,10 @@ psutil
 scikit-learn
 scipy
 seaborn
+sentencepiece
 torch
 torchvision
-#transformers
+transformers
 tqdm
 ultralytics
 
