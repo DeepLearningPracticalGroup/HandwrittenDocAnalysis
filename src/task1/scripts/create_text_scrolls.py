@@ -7,10 +7,10 @@ to execute this script:
 first pip install ipython
 then enter the following command in terminal:
 ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800
+--augment_per_char 1 
 or
 <env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 
+--augment_per_char 1
 or
 .venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1
@@ -80,7 +80,7 @@ def main(
     generate_file_scroll(
         file_path="text_files/bible_train.txt",
         yaml_file_path="src/hebrew.yaml",
-        output_dir="generated_scrolls/train/bible_scrolls",
+        output_dir="generated_scrolls/train",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(256, 1024),
@@ -92,7 +92,7 @@ def main(
     generate_file_scroll(
         file_path="text_files/bible_val.txt",
         yaml_file_path="src/hebrew.yaml",
-        output_dir="generated_scrolls/val/bible_scrolls",
+        output_dir="generated_scrolls/val",
         char_paths=X_char_val,
         char_labels=y_char_val,
         canvas_size=(256, 1024),
@@ -103,7 +103,7 @@ def main(
     generate_file_scroll(
         file_path="text_files/hebrew_text/aesops_fables.txt",
         yaml_file_path="src/hebrew.yaml",
-        output_dir="generated_scrolls/train/aesops_scrolls",
+        output_dir="generated_scrolls/train",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(256, 1024),

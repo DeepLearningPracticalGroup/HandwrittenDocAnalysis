@@ -1,4 +1,4 @@
-path: ../HandwrittenDocAnalysis/synthetic_scrolls
+path: ../HandwrittenDocAnalysis/generated_scrolls
 train: train
 val: val
 
