@@ -2,7 +2,8 @@ import os
 import random
 import cv2
 import numpy as np
-
+import yaml
+import re
 
 
 def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
@@ -137,7 +138,7 @@ def generate_synthetic_scroll(
         label_path = os.path.join(label_dir, label_name)
 
         if noise_prob > 0:
-            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/", prob=noise_prob)
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/binarized", prob=noise_prob)
         cv2.imwrite(os.path.join(image_dir, img_name), canvas)
         with open(os.path.join(label_dir, label_name), "w") as f:
             f.write("\n".join(labels))
@@ -147,27 +148,29 @@ def generate_synthetic_scroll(
 
     return image_paths, label_paths
 
+
+def estimate_line_width(line, char_shape_map=None):
+        return sum(
+            char_shape_map.get(char, (20, 20))[1] + (random.randint(0, 5) if char != " " else random.randint(15, 25))
+            for char in line
+        )
+
 def generate_file_scroll(
-    file_path: str,
-    yaml_file_path: str,
-    output_dir: str,
-    char_paths: list[str],
-    char_labels: list[str],
-    canvas_size: tuple[int, int] = (512, 1024),
-    max_lines: int = 20,
-    line_spacing: int = 10,
-    noise_prob: float = 0,
-) -> tuple[list[str], list[str]]:
+        file_path: str,
+        yaml_file_path: str,
+        output_dir: str,
+        char_paths: list[str],
+        char_labels: list[str],
+        canvas_size: tuple[int, int] = (512, 1024),
+        max_lines: int = 20,
+        line_spacing: int = 10,
+        noise_prob: float = 0,
+        verbose: bool = False,
+    ) -> tuple[list[str], list[str]]:
     """
-    Generate scroll images from a text file, keeping only Hebrew characters 
-    as specified in the 'converted' dictionary from hebrew.yaml.
-    Properly handles right-to-left (RTL) rendering for Hebrew.
+    Generate scroll images from a Hebrew text file with right-to-left rendering,
+    realistic character spacing, and optional noise augmentation.
     """
-    import os
-    import yaml
-    import numpy as np
-    import cv2
-    import random
 
     # Load Hebrew characters and mapping from YAML
     with open(yaml_file_path, "r", encoding="utf-8") as f:
@@ -175,20 +178,42 @@ def generate_file_scroll(
         converted = hebrew_data["converted"]
         hebrew_chars = set(converted.keys())
 
-    # Read and filter file text (keep Hebrew chars and spaces only)
+    # Clean up and filter text
     with open(file_path, "r", encoding="utf-8") as f:
-        file_text = "".join([char for char in f.read() if char in hebrew_chars or char == " "])
+        file_text = re.sub(r"\s+", " ", f.read().strip())
+        file_text = "".join([char for char in file_text if char in hebrew_chars or char == " "])
 
     # Map label names to their image paths
     char_to_path = {label: path for path, label in zip(char_paths, char_labels)}
 
-    # Map Hebrew characters to image paths using converted labels
+    # Build image cache and size map
     hebrew_char_to_path = {
         char: char_to_path[converted[char]]
         for char in hebrew_chars
         if converted[char] in char_to_path
     }
+    char_img_cache = {
+        char: cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        for char, path in hebrew_char_to_path.items()
+    }
+    char_shape_map = {
+        char: img.shape for char, img in char_img_cache.items() if img is not None
+    }
 
+    # Split lines based on estimated pixel width
+    lines, current_line = [], ""
+    for char in file_text:
+        if char in hebrew_char_to_path or char == " ":
+            test_line = current_line + char
+            if estimate_line_width(test_line, char_shape_map) >= canvas_size[1] - 40:
+                lines.append(current_line)
+                current_line = char
+            else:
+                current_line = test_line
+    if current_line:
+        lines.append(current_line)
+
+    # Prepare output dirs
     label_dir = os.path.join(output_dir, "labels")
     image_dir = os.path.join(output_dir, "images")
     os.makedirs(label_dir, exist_ok=True)
@@ -199,50 +224,33 @@ def generate_file_scroll(
 
     image_paths = []
     label_paths = []
-
-    lines = []
-    current_line = ""
-    for char in file_text:
-        if char in hebrew_char_to_path or char == " ":
-            current_line += char
-            if len(current_line) >= canvas_size[1] // 20:
-                lines.append(current_line)
-                current_line = ""
-
-    if current_line:
-        lines.append(current_line)
-
     scroll_idx = 0
+
     while lines:
         canvas = np.ones(canvas_size, dtype=np.uint8) * 255
         labels = []
-
         y_cursor = 20
+
         for _ in range(min(max_lines, len(lines))):
             line = lines.pop(0)
-            x_cursor = canvas_size[1] - 20  # start from right for RTL
+            x_cursor = canvas_size[1] - 20
             line_y_offset = random.randint(-5, 5)
 
-            for char in reversed(line):  # reverse for RTL
+            if verbose:
+                print(f"[Line] {line}")
+
+            for char in line:
                 if char == " ":
-                    x_cursor -= random.randint(10, 30)
+                    x_cursor -= random.randint(15, 25)
                     continue
 
-                if char not in hebrew_char_to_path:
-                    continue
-
-                img_path = hebrew_char_to_path[char]
-                char_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-
+                char_img = char_img_cache.get(char)
                 if char_img is None:
                     continue
 
                 h, w = char_img.shape
 
-                if x_cursor - w <= 20:
-                    break
-
-                if y_cursor + h >= canvas_size[0] - 20:
+                if x_cursor - w <= 20 or y_cursor + h >= canvas_size[0] - 20:
                     break
 
                 canvas[
@@ -265,7 +273,7 @@ def generate_file_scroll(
                     f"{char_to_id[label_name]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
                 )
 
-                x_cursor -= w + random.randint(5, 20)  # move leftward
+                x_cursor -= w + random.randint(0, 5)
 
             y_cursor += h + line_spacing
 
@@ -276,7 +284,7 @@ def generate_file_scroll(
         label_path = os.path.join(label_dir, label_name)
 
         if noise_prob > 0:
-            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/", prob=noise_prob)
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/binarized", prob=noise_prob)
 
         cv2.imwrite(img_path, canvas)
         with open(label_path, "w") as f:
@@ -284,7 +292,6 @@ def generate_file_scroll(
 
         image_paths.append(img_path)
         label_paths.append(label_path)
-
         scroll_idx += 1
 
     return image_paths, label_paths

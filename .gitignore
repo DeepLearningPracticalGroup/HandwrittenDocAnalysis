@@ -192,3 +192,4 @@ cython_debug/
 /augmented_chars
 /generated_scrolls
 #/text_files
+/noise_maps

@@ -7,13 +7,13 @@ to execute this script:
 first pip install ipython
 then enter the following command in terminal:
 ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 
+--augment_per_char 1 --num_train_scrolls 800
 or
 <env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 
 or
 .venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 2
+--augment_per_char 1
 """
 
 from time import perf_counter
@@ -29,6 +29,7 @@ from src.task1.utils.data_augmentation import (
 from ultralytics import YOLO
 import random
 import argparse
+
 
 
 def main(
@@ -77,7 +78,7 @@ def main(
 
     # Generate training synthetic scrolls from bible text
     generate_file_scroll(
-        file_path="src/bible_train.txt",
+        file_path="text_files/bible_train.txt",
         yaml_file_path="src/hebrew.yaml",
         output_dir="generated_scrolls/train/bible_scrolls",
         char_paths=X_char_train_extended,
@@ -89,7 +90,7 @@ def main(
 
     # Generate validation synthetic scrolls from bible text
     generate_file_scroll(
-        file_path="src/bible_val.txt",
+        file_path="text_files/bible_val.txt",
         yaml_file_path="src/hebrew.yaml",
         output_dir="generated_scrolls/val/bible_scrolls",
         char_paths=X_char_val,
@@ -100,7 +101,7 @@ def main(
 
     # Generate training synthetic scrolls from translated aesop fables text
     generate_file_scroll(
-        file_path="src/text_files/hebrew_text/aesops_fables.txt",
+        file_path="text_files/hebrew_text/aesops_fables.txt",
         yaml_file_path="src/hebrew.yaml",
         output_dir="generated_scrolls/train/aesops_scrolls",
         char_paths=X_char_train_extended,

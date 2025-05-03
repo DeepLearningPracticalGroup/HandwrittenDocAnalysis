@@ -7,7 +7,7 @@ from PIL import Image
 
 def main():
     input_folder = "noise_maps"
-    output_subfolder = os.path.join(input_folder, "noise_maps_binarized")
+    output_subfolder = os.path.join(input_folder, "binarized")
     os.makedirs(output_subfolder, exist_ok=True)
 
     extensions = ["*.png", "*.jpg", "*.jpeg"]
