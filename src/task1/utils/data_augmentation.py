@@ -1,87 +1,90 @@
 import os
 import io
 import subprocess
-from PIL import Image
-
-from torchvision import transforms
+from PIL import Image, ImageOps
 from tqdm import tqdm
-import torchvision.transforms.functional as F
 import random
+import cv2
+import numpy as np
 
 
-class RandomResize(object):
-    def __init__(self, scale_range=(0.95, 1.05)):
-        self.scale_range = scale_range
+def expand_and_transform(img, degrees=5, scale_range=(0.95, 1.05)):
+    orig_size = img.size
 
-    def __call__(self, img):
-        width, height = img.size
-        scale = random.uniform(*self.scale_range)
-
-        # Calculate crop region
-        new_width = int(width / scale)
-        new_height = int(height / scale)
-
-        left = (width - new_width) // 2
-        top = (height - new_height) // 2
-        right = left + new_width
-        bottom = top + new_height
-
-        # Crop the zoomed area
-        img = img.crop((left, top, right, bottom))
-
-        # Resize back to original size
-        img = img.resize((width, height), resample=Image.BICUBIC)
-
-        return img
-
-def baseline_augmentation(image_paths, labels, output_dir, num_augments=3, seed=42):
-    """
-    Applies augmentations to the given dataset of character images.
-
-    Parameters:
-    - image_paths: List of paths to original images
-    - labels: List of corresponding labels (same length as image_paths)
-    - output_dir: Folder to save augmented images, structured by label/class
-    - num_augments: Number of augmented versions to generate per image
-    - image_size: Output image size as tuple
-    - seed: For reproducibility
-    """
-
-    os.makedirs(output_dir, exist_ok=True)
-    random.seed(seed)
-
-    augmentation_pipeline = transforms.Compose(
-        [
-            RandomResize(scale_range=(0.95, 1.05)),
-            transforms.RandomAffine(degrees=8),
-            transforms.ToTensor(),
-            transforms.ToPILImage(),
-        ]
+    # Expand the image with a white border
+    expanded = ImageOps.expand(
+        img, border=int(0.2 * min(img.size)), fill=(255, 255, 255)
     )
 
-    augmented_image_paths = []
-    augmented_labels = []
+    # Rotate random
+    angle = random.uniform(-degrees, degrees)
+    rotated = expanded.rotate(angle, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
 
-    for img_path, label in tqdm(
-        zip(image_paths, labels), total=len(image_paths), desc="Augmenting dataset"
+    # Resize random (zoom in/out)
+    scale = random.uniform(*scale_range)
+    new_size = [int(s * scale) for s in rotated.size]
+    resized = rotated.resize(new_size, resample=Image.BICUBIC)
+
+    # Crop back to original size
+    left = (resized.width - orig_size[0]) // 2
+    top = (resized.height - orig_size[1]) // 2
+    final = resized.crop((left, top, left + orig_size[0], top + orig_size[1]))
+
+    return final
+
+
+def imagemorph_augmentation(
+    image_paths,
+    labels,
+    output_dir,
+    morph_exec="./imagemorph",
+    augment_per_image=1,
+):
+
+    os.makedirs(output_dir, exist_ok=True)
+    augmented_paths, augmented_labels = [], []
+
+    for idx, input_image_path in tqdm(
+        enumerate(image_paths), total=len(image_paths), desc="Morphing images"
     ):
+        label = str(labels[idx]) if labels else "unknown"
+        label_output_dir = os.path.join(output_dir, label)
+        os.makedirs(label_output_dir, exist_ok=True)
+
+        base_name = os.path.splitext(os.path.basename(input_image_path))[0]
+
         try:
-            img = Image.open(img_path).convert("L")  # grayscale
+            img = Image.open(input_image_path).convert("RGB")
         except Exception as e:
-            print(f"Failed to open {img_path}: {e}")
+            print(f"Failed to open {input_image_path}: {e}")
             continue
 
-        label_dir = os.path.join(output_dir, str(label))
-        os.makedirs(label_dir, exist_ok=True)
+        for i in range(augment_per_image):
+            output_filename = f"{base_name}_morph{i+1}.pgm"
+            output_image_path = os.path.join(label_output_dir, output_filename)
 
-        base_name = os.path.splitext(os.path.basename(img_path))[0]
+            # Apply random transformations
+            img = expand_and_transform(img, degrees=10, scale_range=(0.95, 1.05))
 
-        # Save augmented versions
-        for i in range(num_augments):
-            aug_img = augmentation_pipeline(img)
-            aug_save_path = os.path.join(label_dir, f"{base_name}_aug{i}.png")
-            aug_img.save(aug_save_path)
-            augmented_image_paths.append(aug_save_path)
+            ppm_buffer = io.BytesIO()
+            img.save(ppm_buffer, format="PPM")
+            ppm_buffer.seek(0)
+
+            # Generate a random kernel size and alpha value (to string)
+            kernel_size = str(random.randint(1, 10))
+            alpha = str(random.uniform(0.1, 1.0))
+
+            with open(output_image_path, "wb") as fout:
+                subprocess.run(
+                    [morph_exec, alpha, kernel_size],
+                    input=ppm_buffer.getvalue(),
+                    stdout=fout,
+                    stderr=subprocess.DEVNULL,
+                )
+
+            augmented_paths.append(output_image_path)
             augmented_labels.append(label)
 
-    return augmented_image_paths, augmented_labels
+            ppm_buffer.seek(0)
+
+    return augmented_paths, augmented_labels

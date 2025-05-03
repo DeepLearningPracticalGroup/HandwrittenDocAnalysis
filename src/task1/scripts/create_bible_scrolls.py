@@ -12,7 +12,7 @@ or
 <env_name>/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 
 or
-myenv/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+.venv/bin/ipython src/task1/scripts/create_bible_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 
 """
 
@@ -23,7 +23,10 @@ from src.task1.utils.preprocessing import (
 )
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_bible_scroll
-from src.task1.utils.data_augmentation import baseline_augmentation, imagemorph_augmentation
+from src.task1.utils.data_augmentation import (
+    baseline_augmentation,
+    imagemorph_augmentation,
+)
 from ultralytics import YOLO
 import random
 import argparse
@@ -75,11 +78,22 @@ def main(
 
     # Generate training synthetic scrolls
     X_scroll_train, y_scroll_train = generate_bible_scroll(
-        bible_path="src/bible.txt",
+        bible_path="src/bible_train.txt",
         yaml_file_path="src/hebrew.yaml",
         output_dir="bible_scrolls/train/",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
+        canvas_size=(256, 1024),
+        max_lines=20,
+    )
+
+    # Generate validation synthetic scrolls
+    X_scroll_val, y_scroll_val = generate_bible_scroll(
+        bible_path="src/bible_val.txt",
+        yaml_file_path="src/hebrew.yaml",
+        output_dir="bible_scrolls/val/",
+        char_paths=X_char_val,
+        char_labels=y_char_val,
         canvas_size=(256, 1024),
         max_lines=20,
     )
