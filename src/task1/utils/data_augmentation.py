@@ -40,7 +40,6 @@ def imagemorph_augmentation(
     morph_exec="./imagemorph",
     augment_per_image=1,
 ):
-
     os.makedirs(output_dir, exist_ok=True)
     augmented_paths, augmented_labels = [], []
 
@@ -59,32 +58,53 @@ def imagemorph_augmentation(
             print(f"Failed to open {input_image_path}: {e}")
             continue
 
-        for i in range(augment_per_image):
-            output_filename = f"{base_name}_morph{i+1}.pgm"
-            output_image_path = os.path.join(label_output_dir, output_filename)
+        i = 0
+        attempts = 0
+        while i < augment_per_image:
+            attempts += 1
+            if attempts > 10 * augment_per_image:
+                print(f"Too many failed attempts for {base_name}, skipping augmentation.")
+                break
 
             # Apply random transformations
-            img = expand_and_transform(img, degrees=10, scale_range=(0.95, 1.05))
+            transformed = expand_and_transform(img)
 
+            # Save as PPM to buffer
             ppm_buffer = io.BytesIO()
-            img.save(ppm_buffer, format="PPM")
+            transformed.save(ppm_buffer, format="PPM")
             ppm_buffer.seek(0)
 
-            # Generate a random kernel size and alpha value (to string)
+            # Random morph parameters
             kernel_size = str(random.randint(1, 10))
             alpha = str(random.uniform(0.1, 1.0))
 
+            # Run imagemorph and get result
+            result = subprocess.run(
+                [morph_exec, alpha, kernel_size],
+                input=ppm_buffer.getvalue(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+
+            # Check if output is valid
+            try:
+                # Read result into numpy array without saving to disk yet
+                test_img = Image.open(io.BytesIO(result.stdout)).convert("L")
+                np_img = np.array(test_img)
+
+                if np_img is None or np.mean(np_img) < 10:
+                    continue  # try again
+            except Exception:
+                continue  # try again
+
+            # Passed all checks: save final result
+            output_filename = f"{base_name}_morph{i+1}.pgm"
+            output_image_path = os.path.join(label_output_dir, output_filename)
             with open(output_image_path, "wb") as fout:
-                subprocess.run(
-                    [morph_exec, alpha, kernel_size],
-                    input=ppm_buffer.getvalue(),
-                    stdout=fout,
-                    stderr=subprocess.DEVNULL,
-                )
+                fout.write(result.stdout)
 
             augmented_paths.append(output_image_path)
             augmented_labels.append(label)
-
-            ppm_buffer.seek(0)
+            i += 1
 
     return augmented_paths, augmented_labels

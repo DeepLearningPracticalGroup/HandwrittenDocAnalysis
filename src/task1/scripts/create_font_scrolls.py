@@ -40,12 +40,12 @@ def main(
         output_dir="font_scrolls/train/",
         char_paths=all_X,
         char_labels=all_y,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         num_images=num_train_scrolls,
-        min_chars=5,
-        max_chars=8,
-        min_lines=3,
-        max_lines=6,
+        min_chars=10,
+        max_chars=30,
+        min_lines=5,
+        max_lines=15,
     )
 
     # Generate validation scrolls (still from full set, different seed internally)
@@ -53,12 +53,12 @@ def main(
         output_dir="font_scrolls/val/",
         char_paths=all_X,
         char_labels=all_y,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         num_images=num_val_scrolls,
-        min_chars=5,
-        max_chars=10,
-        min_lines=2,
-        max_lines=18,
+        min_chars=10,
+        max_chars=30,
+        min_lines=5,
+        max_lines=15,
     )
 
     print(f"Total scroll generation time: {round(perf_counter() - start_time, 2)} seconds")

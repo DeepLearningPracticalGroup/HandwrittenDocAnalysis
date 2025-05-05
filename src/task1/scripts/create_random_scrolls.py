@@ -14,6 +14,9 @@ or
 or
 myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 10 --num_val_scrolls 10
+or
+.venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+--augment_per_char 3 --num_train_scrolls 100 --num_val_scrolls 100
 """
 
 from time import perf_counter
@@ -79,12 +82,13 @@ def main(
         output_dir="synthetic_scrolls/train/",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         num_images=num_train_scrolls,
-        min_chars=5,
-        max_chars=8,
-        min_lines=3,
-        max_lines=6,
+        min_chars=10,
+        max_chars=30,
+        min_lines=5,
+        max_lines=15,
+        noise_prob=0.8
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
@@ -92,12 +96,13 @@ def main(
         output_dir="synthetic_scrolls/val/",
         char_paths=X_char_val,
         char_labels=y_char_val,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         num_images=num_val_scrolls,
-        min_chars=5,
-        max_chars=10,
-        min_lines=2,
-        max_lines=18,
+        min_chars=10,
+        max_chars=30,
+        min_lines=5,
+        max_lines=15,
+        noise_prob=0.8
     )
 
     ## To Do's: (only if we want different segmenter and detector)
