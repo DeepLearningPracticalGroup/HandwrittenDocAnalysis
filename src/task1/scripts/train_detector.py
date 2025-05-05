@@ -41,10 +41,24 @@ def main(
     ## But if we need a segmenter first, we can get 'yolov8n-seg.pt'
     model = YOLO("yolov8n.pt")
 
-    # Fine-tune YOLO on scroll dataset:
+    # Train pretrained YOLOv8 model on font-made scrolls:
     ## YOLO will look at the YAML file where we specify the training and validation set
     ## along with the labels
     ### Best model weights will be stored inside runs/
+    model.train(
+        task="detect",
+        data="src/hebrew_first_task.yaml",
+        epochs=epochs,
+        imgsz=input_size,
+        batch=batch_size,
+        patience=patience,
+        optimizer=optimizer,
+        workers=workers,
+        save=True,
+    )
+
+
+    # Fine-tune YOLO on scroll dataset:
     model.train(
         task="detect",
         data=yaml_file_path,

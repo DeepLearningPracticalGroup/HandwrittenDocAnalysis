@@ -37,7 +37,7 @@ def main(
 
     # Generate training scrolls
     generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/train/",
+        output_dir="font_scrolls/train/",
         char_paths=all_X,
         char_labels=all_y,
         canvas_size=(256, 1024),
@@ -50,7 +50,7 @@ def main(
 
     # Generate validation scrolls (still from full set, different seed internally)
     generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/val/",
+        output_dir="font_scrolls/val/",
         char_paths=all_X,
         char_labels=all_y,
         canvas_size=(256, 1024),

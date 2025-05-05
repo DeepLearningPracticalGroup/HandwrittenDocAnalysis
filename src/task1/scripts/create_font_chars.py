@@ -1,4 +1,11 @@
-#Uses pillow (you can also use another imaging library if you want)
+"""
+.venv/bin/ipython src/task1/utils/font2image.py
+"""
+
+
+
+# 
+# Uses pillow (you can also use another imaging library if you want)
 import os
 from PIL import Image, ImageFont, ImageDraw
 
