@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 from glob import glob
 
+from tqdm import tqdm
+
 def get_character_images(root_path: str) -> dict[str, list[str]]:
     """
     Load all character images from subfolders into a dictionary.
@@ -167,3 +169,56 @@ def binarize_image(input_path, output_path, threshold=200):
     bin_img = Image.fromarray(binary, mode='L')
     bin_img.save(output_path)
     return bin_img
+
+def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        return None
+
+    _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    h, w = binary.shape
+    center_x, center_y = w // 2, h // 2
+    cleaned_mask = np.zeros_like(binary)
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area < min_area:
+            continue
+
+        M = cv2.moments(cnt)
+        if M["m00"] == 0:
+            continue
+        cx = int(M["m10"] / M["m00"])
+        cy = int(M["m01"] / M["m00"])
+
+        if abs(cx - center_x) < w * center_tolerance and abs(cy - center_y) < h * center_tolerance:
+            cv2.drawContours(cleaned_mask, [cnt], -1, 255, thickness=cv2.FILLED)
+
+    result = 255 - cleaned_mask
+    return result
+
+def clean_character_dataset(input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    total = 0
+    for label in os.listdir(input_dir):
+        label_path = os.path.join(input_dir, label)
+        if not os.path.isdir(label_path):
+            continue
+
+        out_label_path = os.path.join(output_dir, label)
+        os.makedirs(out_label_path, exist_ok=True)
+
+        images = [f for f in os.listdir(label_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.pgm'))]
+        for img_name in tqdm(images, desc=f"Cleaning {label}"):
+            in_path = os.path.join(label_path, img_name)
+            out_path = os.path.join(out_label_path, img_name)
+
+            cleaned = clean_character_image(in_path)
+            if cleaned is not None:
+                cv2.imwrite(out_path, cleaned)
+                total += 1
+
+    print(f"Finished. Cleaned and saved {total} images to '{output_dir}'.")

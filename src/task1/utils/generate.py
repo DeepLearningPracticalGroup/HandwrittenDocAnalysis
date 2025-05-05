@@ -161,6 +161,9 @@ def generate_synthetic_scroll(
 
         canvas = apply_cutout_noise(canvas, num_rects=10, size_range=(100, 250))
 
+        if noise_prob > 0:
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/noise_maps_binarized", prob=noise_prob)
+
         img_name = f"scroll_{idx:04d}.png"
         label_name = f"scroll_{idx:04d}.txt"
         img_path = os.path.join(image_dir, img_name)
