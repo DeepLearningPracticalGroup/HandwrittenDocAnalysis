@@ -170,35 +170,32 @@ def binarize_image(input_path, output_path, threshold=200):
     bin_img.save(output_path)
     return bin_img
 
-def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
+def clean_character_image(img_path, min_area=20):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         return None
 
-    _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+    # Create mask
+    mask = (img < 250).astype(np.uint8) * 255
 
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Connected components
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
 
-    h, w = binary.shape
-    center_x, center_y = w // 2, h // 2
-    cleaned_mask = np.zeros_like(binary)
+    # Find the largest component
+    areas = stats[1:, cv2.CC_STAT_AREA]
+    if len(areas) == 0:
+        return img
+    main_label = 1 + np.argmax(areas)
 
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        if area < min_area:
-            continue
+    # Build a mask that only includes the largest component
+    final_mask = np.zeros_like(mask)
+    final_mask[labels == main_label] = 255
 
-        M = cv2.moments(cnt)
-        if M["m00"] == 0:
-            continue
-        cx = int(M["m10"] / M["m00"])
-        cy = int(M["m01"] / M["m00"])
+    # Apply mask to the original image
+    cleaned = img.copy()
+    cleaned[final_mask == 0] = 255
 
-        if abs(cx - center_x) < w * center_tolerance and abs(cy - center_y) < h * center_tolerance:
-            cv2.drawContours(cleaned_mask, [cnt], -1, 255, thickness=cv2.FILLED)
-
-    result = 255 - cleaned_mask
-    return result
+    return cleaned
 
 def clean_character_dataset(input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
