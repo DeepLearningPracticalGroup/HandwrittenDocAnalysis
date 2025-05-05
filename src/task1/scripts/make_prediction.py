@@ -1,10 +1,17 @@
 """
-myenv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train7/weights/best.pt" \
---image_path "bible_scrolls/train/images/bible_scroll_0000.png" \
---label_path "bible_scrolls/train/labels/bible_scroll_0000.txt" \
+.venv/bin/ipython src/task1/scripts/make_prediction.py -- \
+--model_path "runs/detect/yolo_1024imgsz_250ep_30realep_adam/weights/best.pt" \
+--image_path "image-data/P22-Fg008-R-C01-R01-binarized.jpg" \
+--label_path "generated_scrolls/val/labels/file_scroll_0000.txt" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.04
+--confidence 0.15
+
+.venv/bin/ipython src/task1/scripts/make_prediction.py -- \
+--model_path "runs/detect/train3/weights/best.pt" \
+--image_path "examples/alef.png" \
+--label_path "generated_scrolls/val/labels/file_scroll_0000.txt" \
+--yaml_file_path "src/hebrew.yaml" \
+--confidence 0.01
 """
 
 import argparse

@@ -193,3 +193,4 @@ cython_debug/
 /generated_scrolls
 #/text_files
 /noise_maps
+/examples
