@@ -1,19 +1,23 @@
 """
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/yolo_1024imgsz_250ep_30realep_adam/weights/best.pt" \
---image_path "image-data/P22-Fg008-R-C01-R01-binarized.jpg" \
+--model_path "runs/detect/train4/weights/best.pt" \
+--image_path "generated_scrolls/val/images/file_scroll_0000.png" \
 --label_path "generated_scrolls/val/labels/file_scroll_0000.txt" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.15
+--confidence 0.075
 
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train3/weights/best.pt" \
---image_path "examples/alef.png" \
---label_path "generated_scrolls/val/labels/file_scroll_0000.txt" \
+--model_path "runs/detect/train4/weights/best.pt" \
+--image_path "image-data/P22-Fg008-R-C01-R01-binarized.jpg" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.01
-"""
+--confidence 0.105
 
+.venv/bin/ipython src/task1/scripts/make_prediction.py -- \
+--model_path "runs/detect/train4/weights/best.pt" \
+--image_path "examples/alef.png" \
+--yaml_file_path "src/hebrew.yaml" \
+--confidence 0.25
+"""
 import argparse
 from ultralytics import YOLO
 import cv2
@@ -48,7 +52,7 @@ def visualize_and_read(results, label_names):
         predictions.sort(key=lambda tup: (tup[1], tup[0]))
 
         # Group predictions into rows based on y1 proximity
-        row_threshold = 10  # Adjust this threshold as needed
+        row_threshold = 25  
         rows = []
         current_row = [predictions[0]]
 
@@ -104,7 +108,7 @@ def decode_labels(label_path, yaml_file_path):
     # Read the YAML file to decode character numbers
     with open(yaml_file_path, "r") as f:
         yaml_data = yaml.safe_load(f)
-    character_map = yaml_data["names"]
+    character_map = yaml_data["hebrew_names"]
 
     # Decode the labels
     decoded_labels = []
@@ -142,17 +146,20 @@ def decode_labels(label_path, yaml_file_path):
     return decoded_labels
 
 
-
-
-def main(model_path: str, image_path: str, label_path:str, yaml_file_path, confidence: float):
+def main(model_path: str, image_path: str, label_path: str, yaml_file_path, confidence: float):
     print(f"Loading model from: {model_path}")
     model = YOLO(model_path)
 
     print(f"Predicting on image: {image_path}")
     print(f"Confidence threshold: {confidence}")
-    decode_labels(label_path, yaml_file_path)
+
+    if label_path:
+        decode_labels(label_path, yaml_file_path)
+    else:
+        print("No ground truth label path provided. Skipping ground truth decoding.")
+
     results = model.predict(source=image_path, conf=confidence, save=False)
-    print(f"Predictions: {results}")
+
     # Get label names from model
     label_names = model.names  # dict: {0: 'A', 1: 'B', ...}
     visualize_and_read(results, label_names)
@@ -177,8 +184,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--label_path",
         type=str,
-        required=True,
-        help="Path to the label file for the image.",
+        required=False,
+        help="Path to the label file for the image. If not provided, ground truth will be skipped.",
     )
     parser.add_argument(
         "--yaml_file_path",
