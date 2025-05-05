@@ -23,7 +23,7 @@ from src.task1.utils.preprocessing import (
 )
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll
-from src.task1.utils.data_augmentation_2 import imagemorph_augmentation
+from src.task1.utils.data_augmentation import imagemorph_augmentation
 from ultralytics import YOLO
 import random
 import argparse

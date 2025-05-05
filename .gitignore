@@ -194,3 +194,5 @@ cython_debug/
 #/text_files
 /noise_maps
 /examples
+/augmented_fonts/
+/font_chars/
