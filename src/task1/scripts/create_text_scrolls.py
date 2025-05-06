@@ -83,7 +83,7 @@ def main(
         output_dir="generated_scrolls/train",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         max_lines=20,
         noise_prob=0.75,
     )
@@ -95,8 +95,9 @@ def main(
         output_dir="generated_scrolls/val",
         char_paths=X_char_val,
         char_labels=y_char_val,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         max_lines=20,
+        noise_prob=0.75,
     )
 
     # Generate training synthetic scrolls from translated aesop fables text
@@ -106,7 +107,7 @@ def main(
         output_dir="generated_scrolls/train",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
-        canvas_size=(256, 1024),
+        canvas_size=(1024, 2048),
         max_lines=20,
         noise_prob=0.75,
     )

@@ -49,6 +49,9 @@ char_map = {'Alef': ')',
 
 # Returns a grayscale image based on specified label of img_size
 def create_image(label, img_size):
+    """
+    Create a blank image with the specified label and size.
+    """
     if label not in char_map:
         raise KeyError('Unknown label!')
 

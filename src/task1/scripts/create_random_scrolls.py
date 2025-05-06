@@ -85,7 +85,7 @@ def main(
         max_chars=30,
         min_lines=5,
         max_lines=15,
-        noise_prob=0.8
+        noise_prob=0.75
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
@@ -99,7 +99,7 @@ def main(
         max_chars=30,
         min_lines=5,
         max_lines=15,
-        noise_prob=0.8
+        noise_prob=0.75
     )
 
     ## To Do's: (only if we want different segmenter and detector)
