@@ -75,7 +75,7 @@ def imagemorph_augmentation(
             ppm_buffer.seek(0)
 
             # Random morph parameters
-            kernel_size = str(random.randint(1, 10))
+            kernel_size = str(random.randint(1, 8))
             alpha = str(random.uniform(0.1, 1.0))
 
             # Run imagemorph and get result

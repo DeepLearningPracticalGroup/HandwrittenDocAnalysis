@@ -38,7 +38,7 @@ def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
 
     return damaged_scroll
 
-def warp_line(image: np.ndarray, max_displacement: int = 10, cycles: float = 1.0) -> np.ndarray:
+def warp_line(image: np.ndarray, max_displacement: int = 10, cycles: float = 1.0):
     h, w = image.shape
     x_vals = np.linspace(0, 2 * np.pi * cycles, w)
     displacement = (np.sin(x_vals) * max_displacement).astype(np.int32)
@@ -52,7 +52,7 @@ def warp_line(image: np.ndarray, max_displacement: int = 10, cycles: float = 1.0
             warped[:h + dy, x] = image[-dy:, x]
         else:
             warped[:, x] = image[:, x]
-    return warped
+    return warped, displacement
 
 def apply_cutout_noise(image: np.ndarray, num_rects: int = 10, size_range: tuple = (80, 200)) -> np.ndarray:
     h, w = image.shape
@@ -61,19 +61,37 @@ def apply_cutout_noise(image: np.ndarray, num_rects: int = 10, size_range: tuple
         rw = random.randint(*size_range)
         y = random.randint(0, max(1, h - rh))
         x = random.randint(0, max(1, w - rw))
-
         mask = np.zeros((rh, rw), dtype=np.uint8)
-
         for _ in range(random.randint(5, 15)):
             cx = random.randint(0, rw)
             cy = random.randint(0, rh)
             radius = random.randint(10, min(rh, rw) // 2)
             cv2.circle(mask, (cx, cy), radius, 255, -1)
-
         roi = image[y:y+rh, x:x+rw]
         np.copyto(roi, 255, where=(mask == 255))
     return image
 
+def filter_occluded_labels(canvas: np.ndarray, labels: list[str], visibility_thresh: float = 0.1) -> list[str]:
+    H, W = canvas.shape
+    valid_labels = []
+    for label in labels:
+        parts = label.strip().split()
+        if len(parts) != 5:
+            continue
+        class_id, x_center, y_center, width, height = map(float, parts)
+        x_center_abs = x_center * W
+        y_center_abs = y_center * H
+        w_abs = width * W
+        h_abs = height * H
+        x1 = max(0, int(x_center_abs - w_abs / 2))
+        x2 = min(W, int(x_center_abs + w_abs / 2))
+        y1 = max(0, int(y_center_abs - h_abs / 2))
+        y2 = min(H, int(y_center_abs + h_abs / 2))
+        region = canvas[y1:y2, x1:x2]
+        visible_fraction = np.mean(region < 250)
+        if visible_fraction >= visibility_thresh:
+            valid_labels.append(label)
+    return valid_labels
 
 def generate_synthetic_scroll(
     output_dir: str,
@@ -88,10 +106,8 @@ def generate_synthetic_scroll(
     noise_prob: float = 0,
     offset_range: tuple[int, int] = (100, 300),
 ):
-    label_dir = os.path.join(output_dir, "labels")
-    image_dir = os.path.join(output_dir, "images")
-    os.makedirs(label_dir, exist_ok=True)
-    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
 
     unique_classes = sorted(set(char_labels))
     char_to_id = {char: idx for idx, char in enumerate(unique_classes)}
@@ -124,50 +140,64 @@ def generate_synthetic_scroll(
 
             x_cursor = (canvas_size[1] - line_width) // 2
             line_img = np.ones((avg_line_height, canvas_size[1]), dtype=np.uint8) * 255
-            line_labels = []
 
+            max_disp = random.randint(5, 10)
+            padding = max_disp + 5
+            padded = np.ones((avg_line_height + 2 * padding, canvas_size[1]), dtype=np.uint8) * 255
+            padded[padding:padding + avg_line_height, :] = line_img
+            cycles = random.uniform(0.5, 2.0)
+            warped_line_img, displacement = warp_line(padded, max_displacement=max_disp, cycles=cycles)
+
+            line_labels = []
             for char_img, char_label in line_chars:
                 h, w = char_img.shape
-                top, bottom = 0, h
-                left, right = x_cursor, x_cursor + w
-                if right > canvas_size[1]:
-                    continue
-                region = line_img[top:bottom, left:right]
-                if region.shape == char_img.shape:
-                    line_img[top:bottom, left:right] = np.minimum(region, char_img)
-                    x_center = (left + w / 2) / canvas_size[1]
-                    y_center = (y_cursor + h / 2) / canvas_size[0]
-                    width = w / canvas_size[1]
-                    height = h / canvas_size[0]
-                    line_labels.append(f"{char_to_id[char_label]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
-                    x_cursor += w + random.randint(5, 15)
-
-            if line_labels:
-                max_disp = random.randint(5, 10)
-                padding = max_disp + 5
-                padded = np.ones((avg_line_height + 2 * padding, canvas_size[1]), dtype=np.uint8) * 255
-                padded[padding:padding + avg_line_height, :] = line_img
-                cycles = random.uniform(0.5, 2.0)
-                warped_line_img = warp_line(padded, max_displacement=max_disp, cycles=cycles)
-
-                if y_cursor + warped_line_img.shape[0] > canvas.shape[0]:
+                if x_cursor + w >= canvas_size[1]:
                     break
 
-                canvas[y_cursor:y_cursor + warped_line_img.shape[0], :] = np.minimum(
-                    canvas[y_cursor:y_cursor + warped_line_img.shape[0], :], warped_line_img
-                )
-                labels.extend(line_labels)
-                y_cursor += int(line_img.shape[0] * random.uniform(1.05, 1.2))
+                x1 = x_cursor
+                x2 = x_cursor + w
+                dx_range = displacement[x1:x2] if x2 > x1 else [0]
+                dy = int(np.mean(dx_range)) if len(dx_range) > 0 else 0
+
+                top = padding + dy
+                bottom = top + h
+                left = x_cursor
+                right = x_cursor + w
+
+                if bottom <= warped_line_img.shape[0]:
+                    warped_line_img[top:bottom, left:right] = np.minimum(
+                        warped_line_img[top:bottom, left:right], char_img
+                    )
+                    x_center = (left + w / 2) / canvas_size[1]
+                    y_center = (y_cursor + top + h / 2) / canvas_size[0]
+                    width = w / canvas_size[1]
+                    height = h / canvas_size[0]
+                    line_labels.append(
+                        f"{char_to_id[char_label]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
+                    )
+
+                x_cursor += w + random.randint(-10, 10)
+
+            if y_cursor + warped_line_img.shape[0] > canvas.shape[0]:
+                break
+
+            canvas[y_cursor:y_cursor + warped_line_img.shape[0], :] = np.minimum(
+                canvas[y_cursor:y_cursor + warped_line_img.shape[0], :], warped_line_img
+            )
+            labels.extend(line_labels)
+            y_cursor += int(warped_line_img.shape[0] * random.uniform(1.05, 1.2))
 
         canvas = apply_cutout_noise(canvas, num_rects=10, size_range=(100, 250))
 
         if noise_prob > 0:
-            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/noise_maps_binarized", prob=noise_prob)
+            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/binarized", prob=noise_prob)
+
+        labels = filter_occluded_labels(canvas, labels, visibility_thresh=0.1)
 
         img_name = f"scroll_{idx:04d}.png"
         label_name = f"scroll_{idx:04d}.txt"
-        img_path = os.path.join(image_dir, img_name)
-        label_path = os.path.join(label_dir, label_name)
+        img_path = os.path.join(output_dir, "images", img_name)
+        label_path = os.path.join(output_dir, "labels", label_name)
 
         cv2.imwrite(img_path, canvas)
         with open(label_path, "w") as f:
