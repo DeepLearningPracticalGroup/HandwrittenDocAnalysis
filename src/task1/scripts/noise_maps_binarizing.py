@@ -1,3 +1,7 @@
+"""
+This script binarizes all images in the noise_maps folder and saves them in a subfolder named binarized.
+"""
+
 import os
 from glob import glob
 from src.task1.utils.preprocessing import binarize_image

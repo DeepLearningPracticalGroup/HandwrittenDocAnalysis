@@ -27,6 +27,9 @@ def get_character_images(root_path: str) -> dict[str, list[str]]:
 
 
 def get_scroll_images(image_path: str, endswith: str):
+    """
+    To get the test scroll image files that end with endswith.
+    """
     dataset = []
     for image in os.listdir(image_path):
         if image.endswith(endswith):
@@ -37,14 +40,25 @@ def get_scroll_images(image_path: str, endswith: str):
 
 
 def get_binarized_scroll_images(image_path):
+    """
+    To get the binarized test scroll images.
+    """
     return get_scroll_images(image_path=image_path, endswith="binarized.jpg")
 
 
 def get_fused_images(image_path):
+    """
+    To get the fused test scroll images.
+    (Never used in the repo)
+    """
     return get_scroll_images(image_path=image_path, endswith="fused.jpg")
 
 
 def get_rgb_scroll_images(image_path):
+    """
+    To get the rgb test scroll images.
+    (Never used in the repo)
+    """
     dataset = []
     for image in os.listdir(image_path):
         if not image.endswith("binarized.jpg") and not image.endswith("fused.jpg"):
@@ -52,19 +66,6 @@ def get_rgb_scroll_images(image_path):
             dataset.append(full_path)
     print(f"Found {len(dataset)} rgb images in the dataset.")
     return dataset
-
-
-# Hough Transform
-def hough_transform(dataset):
-    img = cv2.imread(dataset[0], cv2.IMREAD_GRAYSCALE)
-
-    if img is None:
-        print("Image not loaded.")
-        return
-
-    plt.imshow(img, cmap="gray")
-    plt.axis("off")
-    plt.show()
 
 
 # Image cleaning pipeline (Not needed for testset as it is superbly cleaned)
@@ -147,6 +148,10 @@ def seperate_character_dataset(
     return image_paths, labels
 
 def binarize_image(input_path, output_path, threshold=200):
+    """
+    Binarize an image using a threshold.
+    If the image is in RGBA mode, it converts to grayscale using the luminosity method.
+    """
     img = Image.open(input_path)
 
     # If the image is in RGBA mode, convert it to RGB
@@ -170,7 +175,12 @@ def binarize_image(input_path, output_path, threshold=200):
     bin_img.save(output_path)
     return bin_img
 
-def clean_character_image(img_path, min_area=20):
+
+
+def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
+    """
+    Clean a character image by removing small contours and keeping only the largest ones.
+    """
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         return None
@@ -198,6 +208,9 @@ def clean_character_image(img_path, min_area=20):
     return cleaned
 
 def clean_character_dataset(input_dir, output_dir):
+    """
+    Clean character images in the input directory and save them to the output directory.
+    """
     os.makedirs(output_dir, exist_ok=True)
     total = 0
     for label in os.listdir(input_dir):

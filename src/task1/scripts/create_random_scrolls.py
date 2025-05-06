@@ -6,16 +6,13 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
-<env_name>/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+<env_name>/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
-myenv/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 10 --num_val_scrolls 10
-or
-.venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+.venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 3 --num_train_scrolls 100 --num_val_scrolls 100
 """
 

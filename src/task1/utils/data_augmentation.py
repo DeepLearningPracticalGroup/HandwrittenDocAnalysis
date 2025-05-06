@@ -93,9 +93,9 @@ def imagemorph_augmentation(
                 np_img = np.array(test_img)
 
                 if np_img is None or np.mean(np_img) < 10:
-                    continue  # try again
+                    continue 
             except Exception:
-                continue  # try again
+                continue 
 
             # Passed all checks: save final result
             output_filename = f"{base_name}_morph{i+1}.pgm"

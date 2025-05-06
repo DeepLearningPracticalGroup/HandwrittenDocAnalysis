@@ -1,4 +1,6 @@
 """
+Script to clean the character dataset. Saves the cleaned dataset to a new folder.
+
 .venv/bin/ipython src/task1/scripts/data_cleaning.py
 """
 

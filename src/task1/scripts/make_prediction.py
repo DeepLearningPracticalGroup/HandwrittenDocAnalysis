@@ -1,16 +1,6 @@
 """
-.venv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train4/weights/best.pt" \
---image_path "generated_scrolls/val/images/file_scroll_0000.png" \
---label_path "generated_scrolls/val/labels/file_scroll_0000.txt" \
---yaml_file_path "src/hebrew.yaml" \
---confidence 0.075
-
-.venv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train4/weights/best.pt" \
---image_path "image-data/P22-Fg008-R-C01-R01-binarized.jpg" \
---yaml_file_path "src/hebrew.yaml" \
---confidence 0.105
+This script predicts characters from a scroll image using a trained YOLO model. 
+It also visualizes the results.
 
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
 --model_path "runs/detect/train4/weights/best.pt" \

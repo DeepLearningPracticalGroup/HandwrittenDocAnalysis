@@ -3,15 +3,12 @@ Task 01: DSS dataset
 (a) Preprocessing and character segmentation
 (b) Character recognition
 
+This script trains a YOLOv8n detector on randomly generated scrolls and fine-tunes it on text scrolls (eg. Bible scrolls).
+
 to execute this script:
 first pip install ipython
-then enter the following command in terminal:
-ipython src/task1/scripts/train_detector.py -- --yaml_file_path='src/hebrew.yaml' --input_size=280 \
---batch_size 128 --optimizer 'SGD' --patience 15 --epochs 200 --workers 1
-or
-<env_name>/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
---batch_size 128 --optimizer 'SGD' --patience 15 --epochs 200 --workers 1
-or
+then enter the following command in terminal (adjust the virtual environment name as needed):
+
 .venv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
 --batch_size 128 --optimizer 'SGD' --patience 15 --epochs 1 --workers 1
 """

@@ -1,5 +1,7 @@
 """
 
+This script translates a .txt file from English to Hebrew using a translation model from Hugging Face's Transformers library.
+
 .venv/bin/ipython src/task1/scripts/translator.py -- --input text_files/english_text/aaesops_fables.txt --output text_files/hebrew_text/aaesops_fables.txt
 
 """

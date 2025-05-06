@@ -6,13 +6,13 @@ Task 01: DSS dataset
 to execute this script:
 first pip install ipython
 then enter the following command in terminal:
-ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 
 or
-<env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+<env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1
 or
-.venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill" --augmented_char_path "augmented_chars" \
+.venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1
 """
 

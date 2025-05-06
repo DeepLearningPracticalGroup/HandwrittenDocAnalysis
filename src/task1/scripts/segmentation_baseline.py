@@ -5,9 +5,11 @@ Baseline for:
 enter the following command in terminal:
 ipython src/task1/scripts/main.py
 or
-myenv/bin/ipython src/task1/scripts/segmentation_baseline.py
+.venv/bin/ipython src/task1/scripts/segmentation_baseline.py
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
 import cv2
 from time import perf_counter
 from src.task1.utils.preprocessing import *
@@ -29,7 +31,12 @@ def main():
     # Image cleaning and denoising
     # boxes = cca_segmentation(dataset, plot=True)
     # boxes = projection_segmentation(dataset, plot=True)
-    boxes = projection_segmentation_auto(dataset, plot=True)
+    # boxes = projection_segmentation_auto(dataset, plot=True)
+
+    # Example usage
+    segment_lines_projection(
+        "image-data/P21-Fg006-R-C01-R01-binarized.jpg", min_line_height=10
+    )
 
     print(f"Running time for task 01: {round(perf_counter() - start_time),2} seconds")
 
