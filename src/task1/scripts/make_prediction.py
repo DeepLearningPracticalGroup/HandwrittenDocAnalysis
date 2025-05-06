@@ -4,9 +4,9 @@ It also visualizes the results.
 
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
 --model_path "runs/detect/train4/weights/best.pt" \
---image_path "examples/alef.png" \
+--image_path "whitebg.png" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.25
+--confidence 0.01
 """
 import argparse
 from ultralytics import YOLO
