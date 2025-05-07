@@ -11,7 +11,7 @@ def main():
     image_path = "image-data/P564-Fg003-R-C01-R01-binarized.jpg"
     img = Image.open(image_path).convert("L")
     img_array = np.array(img)
-    process_all_scrolls(root_dir=root_dir, output_root=output_root, N=N)
+    segment_all_scrolls(root_dir=root_dir, output_root=output_root, N=N)
 
     minima, midpoints = find_midpoints(img_array, N)
 

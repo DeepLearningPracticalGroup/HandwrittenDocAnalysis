@@ -265,7 +265,7 @@ def generate_synthetic_scroll_with_ngrams(
     return all_image_paths, all_label_paths
 
 
-def generate_file_scroll_alternative(
+def generate_file_scroll(
     file_path: str,
     yaml_file_path: str,
     output_dir: str,
