@@ -23,4 +23,3 @@ If you want to use a different Python version (e.g., Python 3.10), you can chang
 
 The Makefile also includes a clean command to remove the virtual environment and cache files.
 
----
