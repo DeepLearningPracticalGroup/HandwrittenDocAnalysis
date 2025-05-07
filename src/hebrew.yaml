@@ -1,6 +1,7 @@
-path: ../HandwrittenDocAnalysis/segmented_lines
+path: ../HandwrittenDocAnalysis/dataset/segmented_scrolls
 train: train
 val: val
+
 names:
   0: "Alef"
   1: "Ayin"

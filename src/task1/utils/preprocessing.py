@@ -119,11 +119,11 @@ def clean_images_adaptive(
 
         for i in range(len(original_imgs)):
             axes[i, 0].imshow(original_imgs[i])
-            axes[i, 0].set_title(f"Original {i+1}")
+            axes[i, 0].set_title(f"Original {i + 1}")
             axes[i, 0].axis("off")
 
             axes[i, 1].imshow(cleaned_imgs[i])
-            axes[i, 1].set_title(f"Cleaned {i+1}")
+            axes[i, 1].set_title(f"Cleaned {i + 1}")
             axes[i, 1].axis("off")
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])

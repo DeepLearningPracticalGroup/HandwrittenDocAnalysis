@@ -9,14 +9,12 @@ to execute this script:
 first pip install ipython
 then enter the following command in terminal (adjust the virtual environment name as needed):
 
-.venv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 280 \
---batch_size 128 --optimizer 'SGD' --patience 15 --epochs 1 --workers 1
+.venv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 640 \
+--batch_size 16 --optimizer 'Adam' --patience 15 --epochs 1 --workers 1
 """
 
 from time import perf_counter
 from src.task1.utils.preprocessing import *
-from sklearn.model_selection import train_test_split
-from src.task1.utils.generate import generate_synthetic_scroll
 from ultralytics import YOLO
 import argparse
 
@@ -30,7 +28,6 @@ def main(
     yaml_file_path: str,
     workers: int,
 ):
-
     start_time = perf_counter()
 
     # Load YoLo nano (YOLOv8)
@@ -67,11 +64,10 @@ def main(
         save=True,
     )
 
-    print(f"Running time for task 01: {round(perf_counter() - start_time,2)} seconds")
+    print(f"Running time for task 01: {round(perf_counter() - start_time, 2)} seconds")
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Train a YOLO detector on the DSS dataset."
     )

@@ -100,7 +100,7 @@ def imagemorph_augmentation(
                 continue
 
             # Passed all checks: save final result
-            output_filename = f"{base_name}_morph{i+1}.pgm"
+            output_filename = f"{base_name}_morph{i + 1}.pgm"
             output_image_path = os.path.join(label_output_dir, output_filename)
             with open(output_image_path, "wb") as fout:
                 fout.write(result.stdout)

@@ -1,5 +1,8 @@
 """
 This script binarizes all images in the noise_maps folder and saves them in a subfolder named binarized.
+
+to execute:
+.venv/bin/ipython src/task1/scripts/noise_maps_binarizing.py
 """
 
 import os

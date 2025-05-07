@@ -4,14 +4,7 @@ Task 01: DSS dataset
 (b) Character recognition
 
 to execute this script:
-first pip install ipython
-then enter the following command in terminal:
-ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 1
-or
-<env_name>/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 1
-or
+
 .venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1
 """
@@ -21,15 +14,11 @@ from src.task1.utils.preprocessing import (
     get_character_images,
     seperate_character_dataset,
 )
-from src.task1.utils.generate import (
-    generate_file_scroll_alternative,
-    generate_synthetic_scroll,
-)
+from src.task1.utils.generate import generate_file_scroll
 from src.task1.utils.data_augmentation import imagemorph_augmentation
 from sklearn.model_selection import train_test_split
 import random
 import argparse
-import os
 
 
 def main(
@@ -41,7 +30,7 @@ def main(
     start_time = perf_counter()
     random.seed(20)
 
-    # === Load and prepare training characters ===
+    # Load and prepare training characters
     char_trainset_dict = get_character_images(root_path=train_char_path)
     X_char_train, y_char_train = seperate_character_dataset(char_trainset_dict)
 
@@ -53,7 +42,7 @@ def main(
         stratify=y_char_train,
     )
 
-    # === Augmentation ===
+    # Char Augmentation
     augmented_paths, augmented_labels = imagemorph_augmentation(
         image_paths=X_char_train,
         labels=y_char_train,
@@ -63,32 +52,39 @@ def main(
 
     X_char_train_extended = X_char_train + augmented_paths
     y_char_train_extended = y_char_train + augmented_labels
-
-    # === Generate synthetic scrolls ===
-    for split, text_file, X_chars, y_chars in [
+    # Generate synthetic scrolls
+    for split, text_file, X_chars, y_chars, noise_prob in [
         (
             "train",
             "text_files/bible_train.txt",
             X_char_train_extended,
             y_char_train_extended,
+            0.75,
         ),
-        ("val", "text_files/bible_val.txt", X_char_val, y_char_val),
+        (
+            "val",
+            "text_files/bible_val.txt",
+            X_char_val,
+            y_char_val,
+            0.50,
+        ),
         (
             "train",
             "text_files/hebrew_text/aesops_fables.txt",
             X_char_train_extended,
             y_char_train_extended,
+            0.75,
         ),
     ]:
-        generate_file_scroll_alternative(
-            file_path="text_files/bible_train.txt",
+        generate_file_scroll(
+            file_path=text_file,
             yaml_file_path="src/hebrew.yaml",
-            output_dir="synthetic_scrolls_text/train",
-            char_paths=X_char_train_extended,
-            char_labels=y_char_train_extended,
+            output_dir=f"dataset/synthetic_scrolls_text/{split}",
+            char_paths=X_chars,
+            char_labels=y_chars,
             canvas_size=(1024, 2048),
             max_lines=20,
-            noise_prob=0.75,
+            noise_prob=noise_prob,
             words_per_line_range=(5, 10),
         )
 

@@ -1,3 +1,10 @@
+"""Evaluate YOLO model and extract class probabilities from the last layer.
+
+to execute:
+ipython src/task1/scripts/evaluate_yolo.py -- --model_path "runs/detect/train/weights/best.pt" \
+--input_image "dataset/segmented_scrolls/val/images/random_scroll_0001_line_00.png"
+"""
+
 from ultralytics import YOLO
 import torch
 import argparse

@@ -4,14 +4,7 @@ Task 01: DSS dataset
 (b) Character recognition
 
 to execute this script:
-first pip install ipython
-then enter the following command in terminal:
-ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
-or
-<env_name>/bin/ipython src/task1/scripts/create_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
-or
+
 .venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
 --augment_per_char 1 --num_train_scrolls 100 --num_val_scrolls 100
 """
@@ -24,7 +17,6 @@ from src.task1.utils.preprocessing import (
 from sklearn.model_selection import train_test_split
 from src.task1.utils.generate import generate_synthetic_scroll_with_ngrams
 from src.task1.utils.data_augmentation import imagemorph_augmentation
-from ultralytics import YOLO
 import random
 import argparse
 
@@ -37,7 +29,6 @@ def main(
     num_train_scrolls: int,
     num_val_scrolls: int,
 ):
-
     start_time = perf_counter()
 
     # Ensure some degree of reproducibility
@@ -80,7 +71,7 @@ def main(
 
     # Generate training synthetic scrolls
     X_scroll_train, y_scroll_train = generate_synthetic_scroll_with_ngrams(
-        output_dir="synthetic_scrolls_random/train/",
+        output_dir="dataset/synthetic_scrolls_random/train/",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(1024, 2048),
@@ -93,7 +84,7 @@ def main(
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
     X_scroll_val, y_scroll_val = generate_synthetic_scroll_with_ngrams(
-        output_dir="synthetic_scrolls_random/val/",
+        output_dir="dataset/synthetic_scrolls_random/val/",
         char_paths=X_char_val,
         char_labels=y_char_val,
         canvas_size=(1024, 2048),
@@ -104,39 +95,10 @@ def main(
         ngram_csv_path="ngrams_frequencies_withNames.csv",
     )
 
-    ## To Do's: (only if we want different segmenter and detector)
-
-    ## SEGMENTER TRAINING:
-
-    # Augmentation and merge to X_char_train and y_char_train...
-
-    # Generate training scrolls and validation scrolls from new X_char_train, y_char_train
-
-    # Train a segmenter with the training scrolls
-
-    # Tune the segmenter based on the validation scrolls
-
-    ## PREDICTOR TRAINING:
-
-    # Train a predictor model with X_char_train and y_char_train
-
-    # Tune the predictor using X_char_val and y_char_val
-
-    # Output: Make sure to map each 'English' label with its 'Hebrew' equivalent
-
-    ## FINAL PIPELINE
-
-    # Pass the test scrolls as inputs to the Segmenter and pass the Segmenter's outputs as inputs to the Predictor.
-
-    ## Load test scrolls
-
-    # test_scrolls = get_binarized_scroll_images(image_path=test_scroll_path)
-
-    print(f"Running time for task 01: {round(perf_counter() - start_time,2)} seconds")
+    print(f"Running time for task 01: {round(perf_counter() - start_time, 2)} seconds")
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Create synthetic scrolls for DSS dataset."
     )

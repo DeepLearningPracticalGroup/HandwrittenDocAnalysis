@@ -114,9 +114,9 @@ def render_scroll_from_lines(
     output_dir: str,
     scroll_idx: int,
     noise_prob: float = 0,
+    prename: str = "",
     noise_maps_dir: str = "noise_maps/binarized",
 ) -> Tuple[str, str]:
-
     canvas = np.ones(canvas_size, dtype=np.uint8) * 255
     labels = []
     y_cursor = 20
@@ -206,8 +206,8 @@ def render_scroll_from_lines(
 
     labels = filter_occluded_labels(canvas, labels, visibility_thresh=0.1)
 
-    img_name = f"scroll_{scroll_idx:04d}.png"
-    label_name = f"scroll_{scroll_idx:04d}.txt"
+    img_name = f"{prename}scroll_{scroll_idx:04d}.png"
+    label_name = f"{prename}scroll_{scroll_idx:04d}.txt"
 
     image_dir = os.path.join(output_dir, "images")
     label_dir = os.path.join(output_dir, "labels")
@@ -280,7 +280,13 @@ def generate_synthetic_scroll_with_ngrams(
             lines.append(line)
 
         img_path, label_path = render_scroll_from_lines(
-            lines, char_to_id, canvas_size, output_dir, idx, noise_prob=noise_prob
+            lines,
+            char_to_id,
+            canvas_size,
+            output_dir,
+            idx,
+            noise_prob=noise_prob,
+            prename="random_",
         )
         all_image_paths.append(img_path)
         all_label_paths.append(label_path)
@@ -301,7 +307,6 @@ def generate_file_scroll(
     words_per_line_range: Tuple[int, int] = (2, 8),
     verbose: bool = False,
 ) -> Tuple[List[str], List[str]]:
-
     with open(yaml_file_path, "r", encoding="utf-8") as f:
         hebrew_data = yaml.safe_load(f)
         converted = hebrew_data["converted"]
@@ -363,6 +368,7 @@ def generate_file_scroll(
             output_dir,
             scroll_idx,
             noise_prob=noise_prob,
+            prename="text_",
         )
         image_paths.append(img_path)
         label_paths.append(label_path)

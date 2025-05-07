@@ -39,9 +39,10 @@ def main(input_path: str, output_path: str):
     if output_dir and not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with open(input_path, "r", encoding="utf-8") as infile, open(
-        output_path, "w", encoding="utf-8"
-    ) as outfile:
+    with (
+        open(input_path, "r", encoding="utf-8") as infile,
+        open(output_path, "w", encoding="utf-8") as outfile,
+    ):
         for line in infile:
             english_text = line.strip()
             if english_text:  # Skip empty lines
