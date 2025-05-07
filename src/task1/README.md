@@ -1,27 +1,79 @@
-
 ## 📌 Task 1 Instructions: Dead Sea Scrolls
+
+**All steps can be run using the provided `Makefile` via the `make` command.**  
+- Use `make task_1` to run the full pipeline.  
+- Use `make test_task_1` for a quick test run with smaller parameters.  
+- Use `make reset_task_1` to remove all generated folders and reset the task environment.
 
 All scripts for this task are located in `src/task1/scripts`.
 
-To begin, download the `monkbrill/` folder and place it at the root of the repository. This folder contains the Hebrew character images needed for training.
+---
 
-Then, run the script that performs data cleaning. This will create a new folder called `monkbrill_clean/` at the root, containing the cleaned characters.
+### 🗂️ Setup
 
-Next, download the noise maps from the provided Google Drive folder. Place them inside a new folder named `noise_maps/` at the root. Then, run the script that binarizes these noise maps. This will produce a `binarized/` subfolder inside `noise_maps/`.
+1. **Download Hebrew characters**  
+   Download the `monkbrill/` folder and place it at the root of the repository. This contains the character images used for training.
 
-You will also need to download the ImageMorph tool from its GitHub repository at https://github.com/GrHound/imagemorph.c. This tool is used for character morphing and is referenced in the data augmentation pipeline.
+2. **Clean the character data**  
+   Run the cleaning script to generate a new `monkbrill_clean/` folder with cleaned characters.
 
-The `translation.py` script can be used to translate Aesop’s fables and any other `.txt` files of your choice. Note that the translated `.txt` files are already included in the `text_files/` folder at the root of the repository. If you want to use other files, you will need to modify the code to define whether the new text files will be used for training or validation in the YOLO detection step.
+3. **Download and binarize noise maps**  
+   - Download the noise maps from the provided Google Drive link.  
+   - Place them inside a `noise_maps/` folder at the root.  
+   - Run the binarization script to generate `noise_maps/binarized/`.
 
-To generate synthetic scroll images, run the `create_text_scrolls.py` and `create_random_scrolls.py` scripts. One script creates scroll images using the provided Hebrew `.txt` files, while the other creates random scrolls for augmentation purposes.
+4. **Install ImageMorph tool**  
+   Download from: [https://github.com/GrHound/imagemorph.c](https://github.com/GrHound/imagemorph.c)  
+   This is used during the data augmentation step for character morphing.
 
-After the scroll images are created, use the `line_segmentation.py` script to segment full scroll images into smaller images containing individual lines. This step produces a new folder called `segmented_scrolls/`, which will be used to train the YOLO model.
+---
 
-Once you have segmented line images, train the YOLO detector using the provided training script.
+### 📝 Text Translation (Optional)
 
-After training, you can run the prediction script by providing the path to the trained YOLO model along with the input scroll image. If a ground truth label is available for that image, you can also provide it to compare the model's prediction with the ground truth.
+Use `translation.py` to translate Aesop’s fables or other `.txt` files.  
+Translated `.txt` files are already available in the `text_files/` folder.  
+If you add your own files, you must specify whether they are for training or validation in the YOLO step.
 
-Finally, you can visualize the predicted bounding boxes by using the `visualise_bounding_boxes.py` script. This script takes a scroll image and a label file as input and overlays the ground truth bounding boxes on the image for inspection.
+---
+
+### 🖼️ Synthetic Data Generation
+
+Run the following scripts to create synthetic scroll images:
+- `create_random_scrolls.py`: Generates random scrolls using the cleaned characters and noise maps.
+- `create_text_scrolls.py`: Generates scrolls from Hebrew `.txt` files.
+
+These scripts rely on the cleaned character set (`monkbrill_clean/`) and binarized noise maps (`noise_maps/binarized/`).
+
+---
+
+### ✂️ Line Segmentation
+
+Use `line_segmentation.py` to segment the scrolls into individual lines.  
+This creates a `segmented_scrolls/` folder, which is used for training YOLO.
+
+---
+
+### 🧠 Train the Detector
+
+Run `train_detector.py` to train the YOLO model on the segmented scrolls using your dataset and configuration (`src/hebrew.yaml`, etc.).
+
+---
+
+### 🔍 Predict & Visualize
+
+- Use the prediction script to apply the trained YOLO model to new scroll images.
+- Use `visualise_bounding_boxes.py` to overlay bounding boxes from label files onto images for inspection.
+
+---
+
+### ⚙️ Makefile Commands Summary
+
+| Command             | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `make task_1`       | Runs the full Task 1 pipeline with default parameters.                      |
+| `make test_task_1`  | Runs a small test pipeline (1 augment per char, 50/20 scrolls, 1 epoch).    |
+| `make reset_task_1` | Deletes `augmented_chars`, `dataset`, and `noise_maps/binarized/` folders. |
+
 
 ---
 
