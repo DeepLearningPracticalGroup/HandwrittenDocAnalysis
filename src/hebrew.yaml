@@ -1,4 +1,4 @@
-path: ../HandwrittenDocAnalysis/generated_scrolls
+path: ../HandwrittenDocAnalysis/segmented_lines
 train: train
 val: val
 names:

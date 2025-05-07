@@ -2,8 +2,7 @@ import os
 import random
 import cv2
 import numpy as np
-import yaml
-import re
+from typing import List, Tuple
 
 def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
     if random.random() > prob:
@@ -93,279 +92,201 @@ def filter_occluded_labels(canvas: np.ndarray, labels: list[str], visibility_thr
             valid_labels.append(label)
     return valid_labels
 
+def render_scroll_from_lines(
+    lines: List[List[Tuple[np.ndarray, str]]],
+    char_to_id: dict,
+    canvas_size: Tuple[int, int],
+    output_dir: str,
+    scroll_idx: int,
+    noise_prob: float = 0,
+    noise_maps_dir: str = "noise_maps/binarized"
+) -> Tuple[str, str]:
+
+    canvas = np.ones(canvas_size, dtype=np.uint8) * 255
+    labels = []
+    y_cursor = 20
+
+    for line_chars in lines:
+        if not line_chars:
+            continue
+
+        x_cursor = (canvas_size[1] - sum(img.shape[1] for img, _ in line_chars)) // 2
+        line_img = np.ones((60, canvas_size[1]), dtype=np.uint8) * 255
+
+        max_disp = random.randint(5, 10)
+        padding = max_disp + 5
+        padded = np.ones((line_img.shape[0] + 2 * padding, canvas_size[1]), dtype=np.uint8) * 255
+        padded[padding:padding + line_img.shape[0], :] = line_img
+        cycles = random.uniform(0.5, 2.0)
+        warped_line_img, displacement = warp_line(padded, max_displacement=max_disp, cycles=cycles)
+
+        line_labels = []
+
+        for char_img, char_label in line_chars:
+            h, w = char_img.shape
+            if x_cursor + w >= canvas_size[1]:
+                break
+
+            x1, x2 = x_cursor, x_cursor + w
+            dy = int(np.mean(displacement[x1:x2])) if x2 > x1 else 0
+
+            top = padding + dy
+            bottom = top + h
+            left = x_cursor
+            right = x_cursor + w
+
+            if bottom <= warped_line_img.shape[0]:
+                warped_line_img[top:bottom, left:right] = np.minimum(
+                    warped_line_img[top:bottom, left:right], char_img)
+
+                x_center = (left + w / 2) / canvas_size[1]
+                y_center = (y_cursor + top + h / 2) / canvas_size[0]
+                width = w / canvas_size[1]
+                height = h / canvas_size[0]
+
+                line_labels.append(
+                    f"{char_to_id[char_label]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
+                )
+
+            x_cursor += w + random.randint(-10, 10)
+
+        if y_cursor + warped_line_img.shape[0] > canvas.shape[0]:
+            break
+
+        canvas[y_cursor:y_cursor + warped_line_img.shape[0], :] = np.minimum(
+            canvas[y_cursor:y_cursor + warped_line_img.shape[0], :], warped_line_img
+        )
+        labels.extend(line_labels)
+        y_cursor += int(warped_line_img.shape[0] * random.uniform(1.05, 1.2))
+
+    canvas = apply_cutout_noise(canvas, num_rects=10, size_range=(100, 250))
+    if noise_prob > 0:
+        canvas = apply_noise_map(canvas, noise_maps_dir=noise_maps_dir, prob=noise_prob)
+
+    labels = filter_occluded_labels(canvas, labels, visibility_thresh=0.1)
+
+    img_name = f"scroll_{scroll_idx:04d}.png"
+    label_name = f"scroll_{scroll_idx:04d}.txt"
+
+    image_dir = os.path.join(output_dir, "images")
+    label_dir = os.path.join(output_dir, "labels")
+    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(label_dir, exist_ok=True)
+
+    img_path = os.path.join(image_dir, img_name)
+    label_path = os.path.join(label_dir, label_name)
+
+    cv2.imwrite(img_path, canvas)
+    with open(label_path, "w") as f:
+        f.write("\n".join(labels))
+
+    return img_path, label_path
+
+
 def generate_synthetic_scroll(
     output_dir: str,
-    char_paths: list[str],
-    char_labels: list[str],
-    canvas_size: tuple[int, int] = (1024, 2048),
+    char_paths: List[str],
+    char_labels: List[str],
+    canvas_size: Tuple[int, int] = (1024, 2048),
     num_images: int = 100,
     min_chars: int = 5,
     max_chars: int = 20,
     min_lines: int = 2,
     max_lines: int = 10,
-    noise_prob: float = 0,
-    offset_range: tuple[int, int] = (100, 300),
+    noise_prob: float = 0
 ):
-    os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
-    os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
-
     unique_classes = sorted(set(char_labels))
     char_to_id = {char: idx for idx, char in enumerate(unique_classes)}
 
-    image_paths = []
-    label_paths = []
+    all_image_paths = []
+    all_label_paths = []
 
     for idx in range(num_images):
-        canvas = np.ones(canvas_size, dtype=np.uint8) * 255
-        labels = []
-
-        num_lines = random.randint(min_lines, max_lines)
-        avg_line_height = 60
-        estimated_text_height = num_lines * avg_line_height
-        y_cursor = max(20, (canvas_size[0] - estimated_text_height) // 2 + random.randint(-30, 30))
-
-        for _ in range(num_lines):
-            num_chars = random.randint(min_chars, max_chars)
-            line_chars = []
-            line_width = 0
-            for _ in range(num_chars):
+        lines = []
+        for _ in range(random.randint(min_lines, max_lines)):
+            line = []
+            for _ in range(random.randint(min_chars, max_chars)):
                 i = random.randint(0, len(char_paths) - 1)
-                img = cv2.imread(char_paths[i], cv2.IMREAD_GRAYSCALE)
-                if img is not None:
-                    line_chars.append((img, char_labels[i]))
-                    line_width += img.shape[1] + 10
+                char_img = cv2.imread(char_paths[i], cv2.IMREAD_GRAYSCALE)
+                if char_img is not None:
+                    line.append((char_img, char_labels[i]))
+            lines.append(line)
 
-            if not line_chars:
-                continue
-
-            x_cursor = (canvas_size[1] - line_width) // 2
-            line_img = np.ones((avg_line_height, canvas_size[1]), dtype=np.uint8) * 255
-
-            max_disp = random.randint(5, 10)
-            padding = max_disp + 5
-            padded = np.ones((avg_line_height + 2 * padding, canvas_size[1]), dtype=np.uint8) * 255
-            padded[padding:padding + avg_line_height, :] = line_img
-            cycles = random.uniform(0.5, 2.0)
-            warped_line_img, displacement = warp_line(padded, max_displacement=max_disp, cycles=cycles)
-
-            line_labels = []
-            for char_img, char_label in line_chars:
-                h, w = char_img.shape
-                if x_cursor + w >= canvas_size[1]:
-                    break
-
-                x1 = x_cursor
-                x2 = x_cursor + w
-                dx_range = displacement[x1:x2] if x2 > x1 else [0]
-                dy = int(np.mean(dx_range)) if len(dx_range) > 0 else 0
-
-                top = padding + dy
-                bottom = top + h
-                left = x_cursor
-                right = x_cursor + w
-
-                if bottom <= warped_line_img.shape[0]:
-                    warped_line_img[top:bottom, left:right] = np.minimum(
-                        warped_line_img[top:bottom, left:right], char_img
-                    )
-                    x_center = (left + w / 2) / canvas_size[1]
-                    y_center = (y_cursor + top + h / 2) / canvas_size[0]
-                    width = w / canvas_size[1]
-                    height = h / canvas_size[0]
-                    line_labels.append(
-                        f"{char_to_id[char_label]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
-                    )
-
-                x_cursor += w + random.randint(-10, 10)
-
-            if y_cursor + warped_line_img.shape[0] > canvas.shape[0]:
-                break
-
-            canvas[y_cursor:y_cursor + warped_line_img.shape[0], :] = np.minimum(
-                canvas[y_cursor:y_cursor + warped_line_img.shape[0], :], warped_line_img
-            )
-            labels.extend(line_labels)
-            y_cursor += int(warped_line_img.shape[0] * random.uniform(1.05, 1.2))
-
-        canvas = apply_cutout_noise(canvas, num_rects=10, size_range=(100, 250))
-
-        if noise_prob > 0:
-            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/binarized", prob=noise_prob)
-
-        labels = filter_occluded_labels(canvas, labels, visibility_thresh=0.1)
-
-        img_name = f"scroll_{idx:04d}.png"
-        label_name = f"scroll_{idx:04d}.txt"
-        img_path = os.path.join(output_dir, "images", img_name)
-        label_path = os.path.join(output_dir, "labels", label_name)
-
-        cv2.imwrite(img_path, canvas)
-        with open(label_path, "w") as f:
-            f.write("\n".join(labels))
-
-        image_paths.append(img_path)
-        label_paths.append(label_path)
-
-    return image_paths, label_paths
-
-
-def estimate_line_width(line, char_shape_map=None):
-        return sum(
-            char_shape_map.get(char, (20, 20))[1] + (random.randint(0, 5) if char != " " else random.randint(15, 25))
-            for char in line
+        img_path, label_path = render_scroll_from_lines(
+            lines, char_to_id, canvas_size, output_dir, idx, noise_prob=noise_prob
         )
+        all_image_paths.append(img_path)
+        all_label_paths.append(label_path)
+
+    return all_image_paths, all_label_paths
+
 
 def generate_file_scroll_alternative(
-        file_path: str,
-        yaml_file_path: str,
-        output_dir: str,
-        char_paths: list[str],
-        char_labels: list[str],
-        canvas_size: tuple[int, int] = (512, 1024),
-        max_lines: int = 20,
-        line_spacing: int = 10,
-        noise_prob: float = 0,
-        verbose: bool = False,
-    ) -> tuple[list[str], list[str]]:
-    """
-    Generate scroll images from a Hebrew text file with right-to-left rendering,
-    realistic character spacing, and optional noise augmentation.
-    """
+    file_path: str,
+    yaml_file_path: str,
+    output_dir: str,
+    char_paths: List[str],
+    char_labels: List[str],
+    canvas_size: Tuple[int, int] = (512, 1024),
+    max_lines: int = 20,
+    line_spacing: int = 10,
+    noise_prob: float = 0,
+    words_per_line_range: Tuple[int, int] = (2, 8),
+    verbose: bool = False
+) -> Tuple[List[str], List[str]]:
+    import yaml
+    import re
 
-    # Load Hebrew characters and mapping from YAML
     with open(yaml_file_path, "r", encoding="utf-8") as f:
         hebrew_data = yaml.safe_load(f)
         converted = hebrew_data["converted"]
         hebrew_chars = set(converted.keys())
 
-    # Clean up and filter text
     with open(file_path, "r", encoding="utf-8") as f:
-        file_text = re.sub(r"\s+", " ", f.read().strip())
-        file_text = "".join([char for char in file_text if char in hebrew_chars or char == " "])
+        text = re.sub(r"\s+", " ", f.read().strip())
+        text = "".join([c for c in text if c in hebrew_chars or c == " "])
 
-    # Map label names to their image paths
+    words = text.split()
+
     char_to_path = {label: path for path, label in zip(char_paths, char_labels)}
+    hebrew_char_to_path = {c: char_to_path[converted[c]] for c in hebrew_chars if converted[c] in char_to_path}
+    char_img_cache = {c: cv2.imread(p, cv2.IMREAD_GRAYSCALE) for c, p in hebrew_char_to_path.items()}
+    char_shape_map = {c: img.shape for c, img in char_img_cache.items() if img is not None}
 
-    # Build image cache and size map
-    hebrew_char_to_path = {
-        char: char_to_path[converted[char]]
-        for char in hebrew_chars
-        if converted[char] in char_to_path
-    }
-    char_img_cache = {
-        char: cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-        for char, path in hebrew_char_to_path.items()
-    }
-    char_shape_map = {
-        char: img.shape for char, img in char_img_cache.items() if img is not None
-    }
+    def estimate_line_width(line):
+        return sum(char_shape_map.get(c, (20, 20))[1] + (random.randint(0, 5) if c != " " else random.randint(20, 40)) for c in line)
 
-    # Split lines based on estimated pixel width
-    lines, current_line = [], ""
-    for char in file_text:
-        if char in hebrew_char_to_path or char == " ":
-            test_line = current_line + char
-            if estimate_line_width(test_line, char_shape_map) >= canvas_size[1] - 40:
-                lines.append(current_line)
-                current_line = char
-            else:
-                current_line = test_line
-    if current_line:
-        lines.append(current_line)
+    lines = []
+    i = 0
+    while i < len(words):
+        num_words = random.randint(*words_per_line_range)
+        line_words = words[i:i + num_words]
+        line = " ".join(line_words)
+        lines.append(line)
+        i += num_words
 
-    # Prepare output dirs
-    label_dir = os.path.join(output_dir, "labels")
-    image_dir = os.path.join(output_dir, "images")
-    os.makedirs(label_dir, exist_ok=True)
-    os.makedirs(image_dir, exist_ok=True)
-
-    unique_classes = sorted(set(char_labels))
-    char_to_id = {char: idx for idx, char in enumerate(unique_classes)}
-
-    image_paths = []
-    label_paths = []
+    char_to_id = {char: idx for idx, char in enumerate(sorted(set(char_labels)))}
+    image_paths, label_paths = [], []
     scroll_idx = 0
 
     while lines:
-        canvas = np.ones(canvas_size, dtype=np.uint8) * 255
-        labels = []
-    
-        # Randomly select a top margin
-        y_cursor = random.randint(10, 280) 
+        batch = lines[:max_lines]
+        lines = lines[max_lines:]
 
-        for _ in range(min(max_lines, len(lines))):
-            line = lines.pop(0)
+        line_data = []
+        for line in batch:
+            row = []
+            for c in line:
+                if c == " ":
+                    # Add fixed-width blank space to simulate inter-word spacing
+                    row.append((np.ones((20, 20), dtype=np.uint8) * 255, "SPACE"))
+                elif c in char_img_cache:
+                    row.append((char_img_cache[c], converted[c]))
+            line_data.append([x for x in row if x[1] != "SPACE"])
 
-            # Random starting point (not always flush right)
-            initial_margin = random.randint(10, 260)
-            x_cursor = canvas_size[1] - initial_margin
-
-            # Random vertical offset for the whole line
-            line_y_offset = random.randint(-10, 10)
-
-            if verbose:
-                print(f"[Line] {line}")
-
-            for char in line:
-                if char == " ":
-                    # Vary word spacing more broadly
-                    x_cursor -= random.randint(10, 50)
-                    continue
-
-                char_img = char_img_cache.get(char)
-                if char_img is None:
-                    continue
-
-                h, w = char_img.shape
-
-                if x_cursor - w <= 0 or y_cursor + h >= canvas_size[0] - 10:
-                    break
-
-                # Character-level jitter
-                jitter_y = line_y_offset + random.randint(-3, 3)
-                jitter_x = random.randint(-3, 3)
-
-                y1 = max(0, y_cursor + jitter_y)
-                y2 = y1 + h
-                x1 = max(0, x_cursor - w + jitter_x)
-                x2 = x1 + w
-
-                y2 = min(y2, canvas_size[0])
-                x2 = min(x2, canvas_size[1])
-                cropped_char = char_img[:y2 - y1, :x2 - x1]
-
-                canvas[y1:y2, x1:x2] = np.minimum(canvas[y1:y2, x1:x2], cropped_char)
-
-                label_name = converted[char]
-                x_center = (x1 + (x2 - x1) / 2) / canvas_size[1]
-                y_center = (y1 + (y2 - y1) / 2) / canvas_size[0]
-                width = (x2 - x1) / canvas_size[1]
-                height = (y2 - y1) / canvas_size[0]
-
-                labels.append(
-                    f"{char_to_id[label_name]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
-                )
-
-                # Overlap encouraged, especially at word/char level
-                x_cursor -= w - random.randint(-4, 16)
-
-            # Randomize vertical spacing between lines
-            y_cursor += h + random.randint(line_spacing - 5, line_spacing + 12)
-
-
-        img_name = f"file_scroll_{scroll_idx:04d}.png"
-        label_name = f"file_scroll_{scroll_idx:04d}.txt"
-
-        img_path = os.path.join(image_dir, img_name)
-        label_path = os.path.join(label_dir, label_name)
-
-        if noise_prob > 0:
-            canvas = apply_noise_map(canvas, noise_maps_dir="noise_maps/binarized", prob=noise_prob)
-
-        cv2.imwrite(img_path, canvas)
-        with open(label_path, "w") as f:
-            f.write("\n".join(labels))
-
+        img_path, label_path = render_scroll_from_lines(
+            line_data, char_to_id, canvas_size, output_dir, scroll_idx, noise_prob=noise_prob
+        )
         image_paths.append(img_path)
         label_paths.append(label_path)
         scroll_idx += 1
