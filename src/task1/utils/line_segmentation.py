@@ -91,7 +91,7 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
 
     return cropped_lines
 
-def process_all_scrolls(root_dir="synthetic_scrolls", output_root="segmented_lines", N=40, margin=10):
+def segment_all_scrolls(root_dir="synthetic_scrolls", output_root="segmented_lines", N=40, margin=10):
     for split in ["train", "val"]:
         image_dir = os.path.join(root_dir, split, "images")
         label_dir = os.path.join(root_dir, split, "labels")

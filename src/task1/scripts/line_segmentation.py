@@ -1,4 +1,4 @@
-from src.task1.utils.line_segmentation import process_all_scrolls, find_midpoints
+from src.task1.utils.line_segmentation import segment_all_scrolls, find_midpoints
 import numpy as np
 from src.task1.utils.plots import show_line_segmentation_on_image
 from PIL import Image
