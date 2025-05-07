@@ -215,7 +215,7 @@ def estimate_line_width(line, char_shape_map=None):
             for char in line
         )
 
-def generate_file_scroll(
+def generate_file_scroll_alternative(
         file_path: str,
         yaml_file_path: str,
         output_dir: str,
@@ -289,19 +289,27 @@ def generate_file_scroll(
     while lines:
         canvas = np.ones(canvas_size, dtype=np.uint8) * 255
         labels = []
-        y_cursor = 20
+    
+        # Randomly select a top margin
+        y_cursor = random.randint(10, 280) 
 
         for _ in range(min(max_lines, len(lines))):
             line = lines.pop(0)
-            x_cursor = canvas_size[1] - 20
-            line_y_offset = random.randint(-5, 5)
+
+            # Random starting point (not always flush right)
+            initial_margin = random.randint(10, 260)
+            x_cursor = canvas_size[1] - initial_margin
+
+            # Random vertical offset for the whole line
+            line_y_offset = random.randint(-10, 10)
 
             if verbose:
                 print(f"[Line] {line}")
 
             for char in line:
                 if char == " ":
-                    x_cursor -= random.randint(15, 25)
+                    # Vary word spacing more broadly
+                    x_cursor -= random.randint(10, 50)
                     continue
 
                 char_img = char_img_cache.get(char)
@@ -310,32 +318,40 @@ def generate_file_scroll(
 
                 h, w = char_img.shape
 
-                if x_cursor - w <= 20 or y_cursor + h >= canvas_size[0] - 20:
+                if x_cursor - w <= 0 or y_cursor + h >= canvas_size[0] - 10:
                     break
 
-                canvas[
-                    y_cursor + line_y_offset : y_cursor + h + line_y_offset,
-                    x_cursor - w : x_cursor,
-                ] = np.minimum(
-                    canvas[
-                        y_cursor + line_y_offset : y_cursor + h + line_y_offset,
-                        x_cursor - w : x_cursor,
-                    ],
-                    char_img,
-                )
+                # Character-level jitter
+                jitter_y = line_y_offset + random.randint(-3, 3)
+                jitter_x = random.randint(-3, 3)
+
+                y1 = max(0, y_cursor + jitter_y)
+                y2 = y1 + h
+                x1 = max(0, x_cursor - w + jitter_x)
+                x2 = x1 + w
+
+                y2 = min(y2, canvas_size[0])
+                x2 = min(x2, canvas_size[1])
+                cropped_char = char_img[:y2 - y1, :x2 - x1]
+
+                canvas[y1:y2, x1:x2] = np.minimum(canvas[y1:y2, x1:x2], cropped_char)
 
                 label_name = converted[char]
-                x_center = (x_cursor - w / 2) / canvas_size[1]
-                y_center = (y_cursor + line_y_offset + h / 2) / canvas_size[0]
-                width = w / canvas_size[1]
-                height = h / canvas_size[0]
+                x_center = (x1 + (x2 - x1) / 2) / canvas_size[1]
+                y_center = (y1 + (y2 - y1) / 2) / canvas_size[0]
+                width = (x2 - x1) / canvas_size[1]
+                height = (y2 - y1) / canvas_size[0]
+
                 labels.append(
                     f"{char_to_id[label_name]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
                 )
 
-                x_cursor -= w + random.randint(0, 5)
+                # Overlap encouraged, especially at word/char level
+                x_cursor -= w - random.randint(-4, 16)
 
-            y_cursor += h + line_spacing
+            # Randomize vertical spacing between lines
+            y_cursor += h + random.randint(line_spacing - 5, line_spacing + 12)
+
 
         img_name = f"file_scroll_{scroll_idx:04d}.png"
         label_name = f"file_scroll_{scroll_idx:04d}.txt"
