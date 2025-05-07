@@ -32,8 +32,8 @@ def visualize_scroll_with_boxes(image_path: str, label_path: str, box_color="red
     plt.show()
 
 def main():
-    image_path = "synthetic_scrolls/train/images/scroll_0069.png"
-    label_path = "synthetic_scrolls/train/labels/scroll_0069.txt"
+    image_path = "segmented_lines/images/line_02.png"
+    label_path = "segmented_lines/labels/line_02.txt"
     visualize_scroll_with_boxes(image_path, label_path)
 
 if __name__ == "__main__":
