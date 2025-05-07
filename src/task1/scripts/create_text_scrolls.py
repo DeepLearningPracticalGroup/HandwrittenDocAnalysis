@@ -21,7 +21,7 @@ from src.task1.utils.preprocessing import (
     get_character_images,
     seperate_character_dataset,
 )
-from src.task1.utils.generate import generate_file_scroll, generate_synthetic_scroll
+from src.task1.utils.generate import generate_file_scroll_alternative, generate_synthetic_scroll
 from src.task1.utils.data_augmentation import imagemorph_augmentation
 from sklearn.model_selection import train_test_split
 import random
@@ -67,16 +67,16 @@ def main(
         ("val", "text_files/bible_val.txt", X_char_val, y_char_val),
         ("train", "text_files/hebrew_text/aesops_fables.txt", X_char_train_extended, y_char_train_extended),
     ]:
-        generate_file_scroll(
+        generate_file_scroll_alternative(
             file_path="text_files/bible_train.txt",
             yaml_file_path="src/hebrew.yaml",
-            output_dir="generated_scrolls/train",
+            output_dir="synthetic_scrolls_text/train",
             char_paths=X_char_train_extended,
             char_labels=y_char_train_extended,
             canvas_size=(1024, 2048),
             max_lines=20,
             noise_prob=0.75,
-            words_per_line_range=(2, 8)
+            words_per_line_range=(5, 10)
         )
 
     print(f"Task 01 completed in {round(perf_counter() - start_time, 2)} seconds")

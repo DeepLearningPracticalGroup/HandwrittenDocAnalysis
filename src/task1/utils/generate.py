@@ -3,6 +3,10 @@ import random
 import cv2
 import numpy as np
 from typing import List, Tuple
+import pandas as pd
+import yaml
+import re
+from collections import defaultdict
 
 def apply_noise_map(scroll_img, noise_maps_dir, prob=1):
     if random.random() > prob:
@@ -113,11 +117,11 @@ def render_scroll_from_lines(
         x_cursor = (canvas_size[1] - sum(img.shape[1] for img, _ in line_chars)) // 2
         line_img = np.ones((60, canvas_size[1]), dtype=np.uint8) * 255
 
-        max_disp = random.randint(5, 10)
+        max_disp = random.randint(10, 25)
         padding = max_disp + 5
         padded = np.ones((line_img.shape[0] + 2 * padding, canvas_size[1]), dtype=np.uint8) * 255
         padded[padding:padding + line_img.shape[0], :] = line_img
-        cycles = random.uniform(0.5, 2.0)
+        cycles = random.uniform(0.3, 3.0)
         warped_line_img, displacement = warp_line(padded, max_displacement=max_disp, cycles=cycles)
 
         line_labels = []
@@ -125,25 +129,36 @@ def render_scroll_from_lines(
         for char_img, char_label in line_chars:
             h, w = char_img.shape
             if x_cursor + w >= canvas_size[1]:
-                break
+                break  # tronca la riga se non ci sta
 
             x1, x2 = x_cursor, x_cursor + w
-            dy = int(np.mean(displacement[x1:x2])) if x2 > x1 else 0
+            if w <= 0 or x1 >= displacement.shape[0] or x2 > displacement.shape[0] or x2 <= x1:
+                continue
+
+            displacement_slice = displacement[x1:x2]
+            if displacement_slice.size == 0 or np.isnan(displacement_slice).any():
+                continue
+
+            dy = int(np.mean(displacement_slice))
 
             top = padding + dy
             bottom = top + h
             left = x_cursor
             right = x_cursor + w
 
-            if bottom <= warped_line_img.shape[0]:
-                warped_line_img[top:bottom, left:right] = np.minimum(
-                    warped_line_img[top:bottom, left:right], char_img)
+            if left < 0 or top < 0 or right > warped_line_img.shape[1] or bottom > warped_line_img.shape[0]:
+                continue
 
-                x_center = (left + w / 2) / canvas_size[1]
-                y_center = (y_cursor + top + h / 2) / canvas_size[0]
-                width = w / canvas_size[1]
-                height = h / canvas_size[0]
+            warped_line_img[top:bottom, left:right] = np.minimum(
+                warped_line_img[top:bottom, left:right], char_img
+            )
 
+            x_center = (left + w / 2) / canvas_size[1]
+            y_center = (y_cursor + top + h / 2) / canvas_size[0]
+            width = w / canvas_size[1]
+            height = h / canvas_size[0]
+
+            if char_label != "SPACE":
                 line_labels.append(
                     f"{char_to_id[char_label]} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
                 )
@@ -157,7 +172,7 @@ def render_scroll_from_lines(
             canvas[y_cursor:y_cursor + warped_line_img.shape[0], :], warped_line_img
         )
         labels.extend(line_labels)
-        y_cursor += int(warped_line_img.shape[0] * random.uniform(1.05, 1.2))
+        y_cursor += int(warped_line_img.shape[0] * random.uniform(0.8, 1))
 
     canvas = apply_cutout_noise(canvas, num_rects=10, size_range=(100, 250))
     if noise_prob > 0:
@@ -183,18 +198,37 @@ def render_scroll_from_lines(
     return img_path, label_path
 
 
-def generate_synthetic_scroll(
+def generate_synthetic_scroll_with_ngrams(
     output_dir: str,
     char_paths: List[str],
     char_labels: List[str],
     canvas_size: Tuple[int, int] = (1024, 2048),
     num_images: int = 100,
-    min_chars: int = 5,
-    max_chars: int = 20,
     min_lines: int = 2,
     max_lines: int = 10,
-    noise_prob: float = 0
+    noise_prob: float = 0,
+    ngram_csv_path: str = "ngrams_frequencies_withNames.csv"
 ):
+    # Load n-gram data
+    df = pd.read_csv(ngram_csv_path)
+    all_ngrams = df["Names"].astype(str).tolist()
+    all_weights = df["Frequencies"].astype(float).tolist()
+
+    # Build char to path map
+    char_to_paths = defaultdict(list)
+    for path, label in zip(char_paths, char_labels):
+        char_to_paths[label].append(path)
+
+    # Filter ngrams with all valid labels
+    filtered_ngrams = []
+    filtered_weights = []
+    for ngram, weight in zip(all_ngrams, all_weights):
+        labels = ngram.split("_")
+        if all(label in char_to_paths for label in labels):
+            filtered_ngrams.append(labels)  # store as list of labels
+            filtered_weights.append(weight)
+
+    # Prepare class-id mapping
     unique_classes = sorted(set(char_labels))
     char_to_id = {char: idx for idx, char in enumerate(unique_classes)}
 
@@ -205,15 +239,25 @@ def generate_synthetic_scroll(
         lines = []
         for _ in range(random.randint(min_lines, max_lines)):
             line = []
-            for _ in range(random.randint(min_chars, max_chars)):
-                i = random.randint(0, len(char_paths) - 1)
-                char_img = cv2.imread(char_paths[i], cv2.IMREAD_GRAYSCALE)
-                if char_img is not None:
-                    line.append((char_img, char_labels[i]))
+            num_ngrams = random.randint(2, 6)
+            selected_ngrams = random.choices(filtered_ngrams, weights=filtered_weights, k=num_ngrams)
+
+            for ngram_labels in selected_ngrams:
+                for label in reversed(ngram_labels):  # RTL
+                    version_path = random.choice(char_to_paths[label])
+                    char_img = cv2.imread(version_path, cv2.IMREAD_GRAYSCALE)
+                    if char_img is not None:
+                        line.append((char_img, label))
+
             lines.append(line)
 
         img_path, label_path = render_scroll_from_lines(
-            lines, char_to_id, canvas_size, output_dir, idx, noise_prob=noise_prob
+            lines,
+            char_to_id,
+            canvas_size,
+            output_dir,
+            idx,
+            noise_prob=noise_prob
         )
         all_image_paths.append(img_path)
         all_label_paths.append(label_path)
@@ -234,8 +278,6 @@ def generate_file_scroll_alternative(
     words_per_line_range: Tuple[int, int] = (2, 8),
     verbose: bool = False
 ) -> Tuple[List[str], List[str]]:
-    import yaml
-    import re
 
     with open(yaml_file_path, "r", encoding="utf-8") as f:
         hebrew_data = yaml.safe_load(f)
@@ -248,13 +290,15 @@ def generate_file_scroll_alternative(
 
     words = text.split()
 
-    char_to_path = {label: path for path, label in zip(char_paths, char_labels)}
-    hebrew_char_to_path = {c: char_to_path[converted[c]] for c in hebrew_chars if converted[c] in char_to_path}
-    char_img_cache = {c: cv2.imread(p, cv2.IMREAD_GRAYSCALE) for c, p in hebrew_char_to_path.items()}
-    char_shape_map = {c: img.shape for c, img in char_img_cache.items() if img is not None}
+    char_to_paths = defaultdict(list)
+    for path, label in zip(char_paths, char_labels):
+        char_to_paths[label].append(path)
 
-    def estimate_line_width(line):
-        return sum(char_shape_map.get(c, (20, 20))[1] + (random.randint(0, 5) if c != " " else random.randint(20, 40)) for c in line)
+    hebrew_char_to_paths = {
+        c: char_to_paths[converted[c]]
+        for c in hebrew_chars
+        if converted[c] in char_to_paths
+    }
 
     lines = []
     i = 0
@@ -278,14 +322,22 @@ def generate_file_scroll_alternative(
             row = []
             for c in line:
                 if c == " ":
-                    # Add fixed-width blank space to simulate inter-word spacing
-                    row.append((np.ones((20, 20), dtype=np.uint8) * 255, "SPACE"))
-                elif c in char_img_cache:
-                    row.append((char_img_cache[c], converted[c]))
-            line_data.append([x for x in row if x[1] != "SPACE"])
+                    space_width = random.randint(30, 50)
+                    row.append((np.ones((20, space_width), dtype=np.uint8) * 255, "SPACE"))
+                elif c in hebrew_char_to_paths:
+                    version_path = random.choice(hebrew_char_to_paths[c])
+                    img = cv2.imread(version_path, cv2.IMREAD_GRAYSCALE)
+                    if img is not None:
+                        row.append((img, converted[c]))
+            line_data.append(row)
 
         img_path, label_path = render_scroll_from_lines(
-            line_data, char_to_id, canvas_size, output_dir, scroll_idx, noise_prob=noise_prob
+            line_data,
+            char_to_id,
+            canvas_size,
+            output_dir,
+            scroll_idx,
+            noise_prob=noise_prob
         )
         image_paths.append(img_path)
         label_paths.append(label_path)

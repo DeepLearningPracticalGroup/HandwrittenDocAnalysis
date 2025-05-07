@@ -184,13 +184,11 @@ cython_debug/
 *.jpg
 /monkbrill/
 /image-data/
-/synthetic_scrolls/
-/augmented/
+/synthetic_scrolls_random/
+/synthetic_scrolls_text/
 *.pt
 /runs
-/augmented_dataset
 /augmented_chars
-/generated_scrolls
 #/text_files
 /noise_maps
 /examples

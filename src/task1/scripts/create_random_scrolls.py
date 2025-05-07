@@ -13,7 +13,7 @@ or
 --augment_per_char 1 --num_train_scrolls 800 --num_val_scrolls 200
 or
 .venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 3 --num_train_scrolls 100 --num_val_scrolls 100
+--augment_per_char 1 --num_train_scrolls 100 --num_val_scrolls 100
 """
 
 from time import perf_counter
@@ -22,7 +22,7 @@ from src.task1.utils.preprocessing import (
     seperate_character_dataset,
 )
 from sklearn.model_selection import train_test_split
-from src.task1.utils.generate import generate_synthetic_scroll
+from src.task1.utils.generate import generate_synthetic_scroll_with_ngrams
 from src.task1.utils.data_augmentation import imagemorph_augmentation
 from ultralytics import YOLO
 import random
@@ -75,31 +75,29 @@ def main(
     print(f"Augmented training set size: {len(X_char_train_extended)}")
 
     # Generate training synthetic scrolls
-    X_scroll_train, y_scroll_train = generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/train/",
+    X_scroll_train, y_scroll_train = generate_synthetic_scroll_with_ngrams(
+        output_dir="synthetic_scrolls_random/train/",
         char_paths=X_char_train_extended,
         char_labels=y_char_train_extended,
         canvas_size=(1024, 2048),
         num_images=num_train_scrolls,
-        min_chars=10,
-        max_chars=30,
         min_lines=5,
         max_lines=15,
-        noise_prob=0.75
+        noise_prob=0.75,
+        ngram_csv_path = "ngrams_frequencies_withNames.csv"
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
-    X_scroll_val, y_scroll_val = generate_synthetic_scroll(
-        output_dir="synthetic_scrolls/val/",
+    X_scroll_val, y_scroll_val = generate_synthetic_scroll_with_ngrams(
+        output_dir="synthetic_scrolls_random/val/",
         char_paths=X_char_val,
         char_labels=y_char_val,
         canvas_size=(1024, 2048),
         num_images=num_val_scrolls,
-        min_chars=10,
-        max_chars=30,
         min_lines=5,
         max_lines=15,
-        noise_prob=0.75
+        noise_prob=0.75,
+        ngram_csv_path = "ngrams_frequencies_withNames.csv"
     )
 
     ## To Do's: (only if we want different segmenter and detector)
