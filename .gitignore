@@ -172,3 +172,32 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+
+
+# git stuff
+.DS_Store
+
+## Project specific
+*.png
+*.jpg
+/monkbrill/
+/image-data/
+/synthetic_scrolls_random/
+/synthetic_scrolls_text/
+*.pt
+/runs
+/augmented_chars
+#/text_files
+/noise_maps
+/examples
+/augmented_fonts/
+/font_chars/
+/habbakuk/
+/monkbrill_clean/
+/segmented_lines/
+/synthetic_scrolls/
+/generated_scrolls/
+/segmented_scrolls/
+/dataset/
