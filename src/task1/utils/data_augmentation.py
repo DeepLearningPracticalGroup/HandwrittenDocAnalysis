@@ -63,7 +63,9 @@ def imagemorph_augmentation(
         while i < augment_per_image:
             attempts += 1
             if attempts > 10 * augment_per_image:
-                print(f"Too many failed attempts for {base_name}, skipping augmentation.")
+                print(
+                    f"Too many failed attempts for {base_name}, skipping augmentation."
+                )
                 break
 
             # Apply random transformations
@@ -93,9 +95,9 @@ def imagemorph_augmentation(
                 np_img = np.array(test_img)
 
                 if np_img is None or np.mean(np_img) < 10:
-                    continue 
+                    continue
             except Exception:
-                continue 
+                continue
 
             # Passed all checks: save final result
             output_filename = f"{base_name}_morph{i+1}.pgm"

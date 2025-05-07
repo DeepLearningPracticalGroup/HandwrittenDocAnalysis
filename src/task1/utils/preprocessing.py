@@ -7,6 +7,7 @@ from glob import glob
 
 from tqdm import tqdm
 
+
 def get_character_images(root_path: str) -> dict[str, list[str]]:
     """
     Load all character images from subfolders into a dictionary.
@@ -147,6 +148,7 @@ def seperate_character_dataset(
 
     return image_paths, labels
 
+
 def binarize_and_crop_image(input_path, output_path, threshold=200):
     img = Image.open(input_path)
 
@@ -168,10 +170,9 @@ def binarize_and_crop_image(input_path, output_path, threshold=200):
     y0, x0 = coords.min(axis=0)
     y1, x1 = coords.max(axis=0) + 1
 
-    cropped = Image.fromarray(binary_np[y0:y1, x0:x1], mode='L')
+    cropped = Image.fromarray(binary_np[y0:y1, x0:x1], mode="L")
     cropped.save(output_path)
     return cropped
-
 
 
 def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
@@ -186,7 +187,9 @@ def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
     mask = (img < 250).astype(np.uint8) * 255
 
     # Connected components
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+        mask, connectivity=8
+    )
 
     # Find the largest component
     areas = stats[1:, cv2.CC_STAT_AREA]
@@ -204,6 +207,7 @@ def clean_character_image(img_path, min_area=50, center_tolerance=0.25):
 
     return cleaned
 
+
 def clean_character_dataset(input_dir, output_dir):
     """
     Clean character images in the input directory and save them to the output directory.
@@ -218,7 +222,11 @@ def clean_character_dataset(input_dir, output_dir):
         out_label_path = os.path.join(output_dir, label)
         os.makedirs(out_label_path, exist_ok=True)
 
-        images = [f for f in os.listdir(label_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.pgm'))]
+        images = [
+            f
+            for f in os.listdir(label_path)
+            if f.lower().endswith((".png", ".jpg", ".jpeg", ".pgm"))
+        ]
         for img_name in tqdm(images, desc=f"Cleaning {label}"):
             in_path = os.path.join(label_path, img_name)
             out_path = os.path.join(out_label_path, img_name)

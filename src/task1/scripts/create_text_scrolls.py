@@ -21,7 +21,10 @@ from src.task1.utils.preprocessing import (
     get_character_images,
     seperate_character_dataset,
 )
-from src.task1.utils.generate import generate_file_scroll_alternative, generate_synthetic_scroll
+from src.task1.utils.generate import (
+    generate_file_scroll_alternative,
+    generate_synthetic_scroll,
+)
 from src.task1.utils.data_augmentation import imagemorph_augmentation
 from sklearn.model_selection import train_test_split
 import random
@@ -63,9 +66,19 @@ def main(
 
     # === Generate synthetic scrolls ===
     for split, text_file, X_chars, y_chars in [
-        ("train", "text_files/bible_train.txt", X_char_train_extended, y_char_train_extended),
+        (
+            "train",
+            "text_files/bible_train.txt",
+            X_char_train_extended,
+            y_char_train_extended,
+        ),
         ("val", "text_files/bible_val.txt", X_char_val, y_char_val),
-        ("train", "text_files/hebrew_text/aesops_fables.txt", X_char_train_extended, y_char_train_extended),
+        (
+            "train",
+            "text_files/hebrew_text/aesops_fables.txt",
+            X_char_train_extended,
+            y_char_train_extended,
+        ),
     ]:
         generate_file_scroll_alternative(
             file_path="text_files/bible_train.txt",
@@ -76,14 +89,16 @@ def main(
             canvas_size=(1024, 2048),
             max_lines=20,
             noise_prob=0.75,
-            words_per_line_range=(5, 10)
+            words_per_line_range=(5, 10),
         )
 
     print(f"Task 01 completed in {round(perf_counter() - start_time, 2)} seconds")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create synthetic scrolls for DSS dataset.")
+    parser = argparse.ArgumentParser(
+        description="Create synthetic scrolls for DSS dataset."
+    )
     parser.add_argument("--train_char_path", type=str, required=True)
     parser.add_argument("--augmented_char_path", type=str, required=True)
     parser.add_argument("--char_val_size", type=float, default=0.2)

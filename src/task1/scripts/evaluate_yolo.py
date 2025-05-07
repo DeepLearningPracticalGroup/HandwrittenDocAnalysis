@@ -1,9 +1,19 @@
 from ultralytics import YOLO
 import torch
+import argparse
+
 
 def main():
-    model_path = "runs/detect/train6/weights/best.pt"
-    model = YOLO(model_path)
+    parser = argparse.ArgumentParser(description="Evaluate YOLO.")
+    parser.add_argument(
+        "--model_path", type=str, required=True, help="Path to the YOLO model file."
+    )
+    parser.add_argument(
+        "--input_image", type=str, required=True, help="Path to the input image."
+    )
+    args = parser.parse_args()
+
+    model = YOLO(args.model_path)
 
     print(model.model.model[-1].nc)
 
@@ -20,13 +30,14 @@ def main():
     model.model.model[-1].register_forward_hook(extract_class_probs)
 
     # Run inference
-    results = model('segmented_lines/val/images/scroll_0000_line_00.png')
+    results = model(args.input_image)
 
     # After inference
     if extracted_probs:
         print(f"[OUTSIDE] Extracted class probs shape: {extracted_probs[0].shape}")
     else:
         print("[OUTSIDE] No class probabilities extracted.")
+
 
 if __name__ == "__main__":
     main()

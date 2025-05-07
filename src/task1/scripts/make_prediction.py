@@ -8,10 +8,12 @@ It also visualizes the results.
 --yaml_file_path "src/hebrew.yaml" \
 --confidence 0.01
 """
+
 import argparse
 from ultralytics import YOLO
 import cv2
 import yaml
+
 
 def visualize_and_read(results, label_names):
     # Visualize results
@@ -42,7 +44,7 @@ def visualize_and_read(results, label_names):
         predictions.sort(key=lambda tup: (tup[1], tup[0]))
 
         # Group predictions into rows based on y1 proximity
-        row_threshold = 25  
+        row_threshold = 25
         rows = []
         current_row = [predictions[0]]
 
@@ -136,7 +138,9 @@ def decode_labels(label_path, yaml_file_path):
     return decoded_labels
 
 
-def main(model_path: str, image_path: str, label_path: str, yaml_file_path, confidence: float):
+def main(
+    model_path: str, image_path: str, label_path: str, yaml_file_path, confidence: float
+):
     print(f"Loading model from: {model_path}")
     model = YOLO(model_path)
 

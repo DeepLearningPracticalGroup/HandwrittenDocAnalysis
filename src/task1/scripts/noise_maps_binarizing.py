@@ -17,7 +17,7 @@ def main():
 
         fig, ax = plt.subplots()
         fig.patch.set_facecolor("black")
-        ax.set_facecolor("black")        
+        ax.set_facecolor("black")
         ax.imshow(img_np, cmap="gray", vmin=0, vmax=255)
         ax.axis("off")
         if title:
@@ -45,6 +45,7 @@ def main():
     show_image(output_path, title=base_name)
 
     print(f"Binarized {len(image_paths)} images to {output_subfolder}")
+
 
 if __name__ == "__main__":
     main()

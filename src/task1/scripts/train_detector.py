@@ -42,7 +42,7 @@ def main(
     ## YOLO will look at the YAML file where we specify the training and validation set
     ## along with the labels
     ### Best model weights will be stored inside runs/
-    '''model.train(
+    """model.train(
         task="detect",
         data="src/hebrew_first_task.yaml",
         epochs=epochs,
@@ -52,8 +52,7 @@ def main(
         optimizer=optimizer,
         workers=workers,
         save=True,
-    )'''
-
+    )"""
 
     # Fine-tune YOLO on scroll dataset:
     model.train(

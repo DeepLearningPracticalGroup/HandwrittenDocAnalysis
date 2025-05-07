@@ -32,7 +32,7 @@ def find_midpoints(img_array, N=80):
 
 
 def count_intersections(img_array, x1, y1, x2, y2):
-    temp_img = Image.new('L', (img_array.shape[1], img_array.shape[0]), 255)
+    temp_img = Image.new("L", (img_array.shape[1], img_array.shape[0]), 255)
     draw = ImageDraw.Draw(temp_img)
     draw.line([(x1, y1), (x2, y2)], fill=0, width=1)
     line_array = np.array(temp_img)
@@ -49,7 +49,9 @@ def rotate_line(center_x, center_y, x, y, angle_deg):
     return int(x_rotated + center_x), int(y_rotated + center_y)
 
 
-def optimize_segmentation_lines(image_path, midpoints, angle_range=(-10, 10), angle_step=0.5):
+def optimize_segmentation_lines(
+    image_path, midpoints, angle_range=(-10, 10), angle_step=0.5
+):
     img = Image.open(image_path).convert("L")
     img_array = np.array(img)
     img_width, img_height = img.size
@@ -62,19 +64,23 @@ def optimize_segmentation_lines(image_path, midpoints, angle_range=(-10, 10), an
         left_point = (0, midpoint)
         right_point = (img_width, midpoint)
         best_angle = 0
-        min_intersection = float('inf')
+        min_intersection = float("inf")
         best_endpoints = (left_point, right_point)
 
         for angle in np.arange(angle_range[0], angle_range[1] + angle_step, angle_step):
             new_left_x, new_left_y = rotate_line(center_x, center_y, *left_point, angle)
-            new_right_x, new_right_y = rotate_line(center_x, center_y, *right_point, angle)
+            new_right_x, new_right_y = rotate_line(
+                center_x, center_y, *right_point, angle
+            )
 
             new_left_x = max(0, min(img_width - 1, new_left_x))
             new_left_y = max(0, min(img_height - 1, new_left_y))
             new_right_x = max(0, min(img_width - 1, new_right_x))
             new_right_y = max(0, min(img_height - 1, new_right_y))
 
-            intersections = count_intersections(img_array, new_left_x, new_left_y, new_right_x, new_right_y)
+            intersections = count_intersections(
+                img_array, new_left_x, new_left_y, new_right_x, new_right_y
+            )
 
             if intersections < min_intersection:
                 min_intersection = intersections
@@ -87,7 +93,7 @@ def optimize_segmentation_lines(image_path, midpoints, angle_range=(-10, 10), an
 
 
 def extract_line_segments_with_masks(image_path, line_endpoints, padding=10):
-    img = Image.open(image_path).convert('L')
+    img = Image.open(image_path).convert("L")
     img_array = np.array(img)
     height, width = img_array.shape
 
@@ -108,9 +114,14 @@ def extract_line_segments_with_masks(image_path, line_endpoints, padding=10):
         ll_y1_p = min(height - 1, ll_y1 - padding)
         ll_y2_p = min(height - 1, ll_y2 - padding)
 
-        mask = Image.new('L', (width, height), 255)
+        mask = Image.new("L", (width, height), 255)
         draw = ImageDraw.Draw(mask)
-        polygon = [(ul_x1, ul_y1_p), (ul_x2, ul_y2_p), (ll_x2, ll_y2_p), (ll_x1, ll_y1_p)]
+        polygon = [
+            (ul_x1, ul_y1_p),
+            (ul_x2, ul_y2_p),
+            (ll_x2, ll_y2_p),
+            (ll_x1, ll_y1_p),
+        ]
         draw.polygon(polygon, fill=0)
 
         mask_array = np.array(mask)
@@ -142,7 +153,9 @@ def save_line_with_labels(line_img, output_dir, base_name, W, top, bottom, yolo_
         new_w = w_abs / W
         new_h = h_abs / (bottom - top)
         if 0 <= new_y_c <= 1:
-            new_labels.append(f"{int(class_id)} {new_x_c:.6f} {new_y_c:.6f} {new_w:.6f} {new_h:.6f}")
+            new_labels.append(
+                f"{int(class_id)} {new_x_c:.6f} {new_y_c:.6f} {new_w:.6f} {new_h:.6f}"
+            )
 
     with open(os.path.join(output_dir, "labels", base_name + ".txt"), "w") as f:
         f.write("\n".join(new_labels))
@@ -173,7 +186,9 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
         return []
 
     line_endpoints = optimize_segmentation_lines(image_path, midpoints)
-    segments, bounds = extract_line_segments_with_masks(image_path, line_endpoints, padding=margin)
+    segments, bounds = extract_line_segments_with_masks(
+        image_path, line_endpoints, padding=margin
+    )
 
     if label_path is not None:
         os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
@@ -181,7 +196,9 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
 
         for i, (segment, (top, bottom)) in enumerate(zip(segments, bounds)):
             base_name = f"{scroll_id}_line_{i:02d}"
-            save_line_with_labels(segment, output_dir, base_name, W, top, bottom, yolo_labels)
+            save_line_with_labels(
+                segment, output_dir, base_name, W, top, bottom, yolo_labels
+            )
     else:
         for i, segment in enumerate(segments):
             base_name = f"{scroll_id}_line_{i:02d}.png"
@@ -191,14 +208,21 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
     return segments
 
 
-def process_all_scrolls(root_dir="synthetic_scrolls_random", output_root="segmented_lines", N=40, margin=10):
+def segment_all_scrolls(
+    root_dir="synthetic_scrolls_random",
+    output_root="segmented_scrolls",
+    N=40,
+    margin=10,
+):
     for split in ["train", "val"]:
         image_dir = os.path.join(root_dir, split, "images")
         label_dir = os.path.join(root_dir, split, "labels")
         output_dir = os.path.join(output_root, split)
         os.makedirs(output_dir, exist_ok=True)
 
+        counter = 0
         for filename in sorted(os.listdir(image_dir)):
+            counter += 1
             if not filename.endswith(".png"):
                 continue
             image_path = os.path.join(image_dir, filename)
@@ -206,11 +230,19 @@ def process_all_scrolls(root_dir="synthetic_scrolls_random", output_root="segmen
             if not os.path.exists(label_path):
                 label_path = None
 
-            print(f"Segmenting {split}/{filename}")
+            # Ensure the output directories for images and labels exist
+            os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
+            os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+
+            if counter % 50 == 0:
+                print(
+                    f"Processing {split}/{filename} ({counter}/{len(os.listdir(image_dir))})"
+                )
+
             segment_image_into_lines(
                 image_path=image_path,
                 output_dir=output_dir,
                 label_path=label_path,
                 N=N,
-                margin=margin
+                margin=margin,
             )

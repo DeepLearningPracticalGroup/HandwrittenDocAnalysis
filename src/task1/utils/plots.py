@@ -4,14 +4,13 @@ import numpy as np
 from PIL import Image
 
 
-
 def img_visualization(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
     if img is None:
         print("Image not loaded.")
         return
-    
+
     plt.imshow(img, cmap="gray")
     plt.axis("off")
     plt.show()
@@ -34,7 +33,10 @@ def plot_image(image_path: str, title: str = "Image", cmap: str = None) -> None:
     plt.axis("off")
     plt.show()
 
-def show_line_segmentation_on_image(image_path, minima=None, midpoints=None, optimized_lines=None, N=None):
+
+def show_line_segmentation_on_image(
+    image_path, minima=None, midpoints=None, optimized_lines=None, N=None
+):
     """
     Visualizza la segmentazione delle righe su un'immagine.
     Supporta sia linee orizzontali (midpoints) sia linee inclinate (optimized_lines).

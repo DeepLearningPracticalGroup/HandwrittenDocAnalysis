@@ -28,6 +28,7 @@ from ultralytics import YOLO
 import random
 import argparse
 
+
 def main(
     train_char_path: str,
     augmented_char_path: str,
@@ -64,7 +65,10 @@ def main(
 
     # Data augmentation
     augmented_paths, augmented_labels = imagemorph_augmentation(
-        X_char_train, y_char_train, augmented_char_path, augment_per_image=augment_per_char
+        X_char_train,
+        y_char_train,
+        augmented_char_path,
+        augment_per_image=augment_per_char,
     )
 
     # Append new augmented paths and labels
@@ -84,7 +88,7 @@ def main(
         min_lines=5,
         max_lines=15,
         noise_prob=0.75,
-        ngram_csv_path = "ngrams_frequencies_withNames.csv"
+        ngram_csv_path="ngrams_frequencies_withNames.csv",
     )
     # Call again to generate validation synthetic scrolls
     # Also change the params a little bit for better generalization
@@ -97,7 +101,7 @@ def main(
         min_lines=5,
         max_lines=15,
         noise_prob=0.75,
-        ngram_csv_path = "ngrams_frequencies_withNames.csv"
+        ngram_csv_path="ngrams_frequencies_withNames.csv",
     )
 
     ## To Do's: (only if we want different segmenter and detector)
