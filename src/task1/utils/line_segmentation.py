@@ -6,6 +6,9 @@ from PIL import Image, ImageDraw, ImageChops
 import matplotlib.pyplot as plt
 from math import sin, cos, radians
 import cv2
+from pathlib import Path
+
+
 
 def find_minima_and_draw_all_lines(image_path, N=80):
     """Find minima and draw red lines at minima and blue lines between them."""
@@ -265,10 +268,6 @@ def convert_labels_to_segments(original_label_path, line_start, line_end, image_
 
     return new_boxes
 
-import os
-from PIL import Image
-from pathlib import Path
-
 def segment_scrolls(
     input_img_dir,
     input_label_dir,
@@ -344,5 +343,3 @@ def segment_scrolls(
             segment_labels = convert_labels_to_segments(label_path, top_y, bot_y, image_height)
             with open(segment_lbl_path, 'w') as f:
                 f.write('\n'.join(segment_labels))
-
-            print(f"Saved: {segment_img_path} and {segment_lbl_path}")

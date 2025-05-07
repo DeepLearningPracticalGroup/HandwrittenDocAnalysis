@@ -25,8 +25,8 @@ def main():
 )
     # Segment generated validation scrolls
     segment_scrolls(
-    input_img_dir='generated_scrolls/generated_scrolls/val/images',
-    input_label_dir='generated_scrolls/generated_scrolls/val/labels',
+    input_img_dir='generated_scrolls/val/images',
+    input_label_dir='generated_scrolls/val/labels',
     output_img_dir='segmented_scrolls/generated_scrolls/val/images',
     output_label_dir='segmented_scrolls/generated_scrolls/val/labels',
     N=80,
@@ -36,16 +36,16 @@ def main():
 )
     # Segment synthetic training scrolls
     segment_scrolls(
-    input_img_dir='synthetic_scrolls/synthetic_scrolls/train/images',
-    input_label_dir='synthetic_scrolls/synthetic_scrolls/train/labels',
+    input_img_dir='synthetic_scrolls/train/images',
+    input_label_dir='synthetic_scrolls/train/labels',
     output_img_dir='segmented_scrolls/synthetic_scrolls/train/images',
     output_label_dir='segmented_scrolls/synthetic_scrolls/train/labels',
     )
 
     # Segment synthetic validation scrolls
     segment_scrolls(
-    input_img_dir='synthetic_scrolls/synthetic_scrolls/val/images',
-    input_label_dir='synthetic_scrolls/synthetic_scrolls/val/labels',
+    input_img_dir='synthetic_scrolls/val/images',
+    input_label_dir='synthetic_scrolls/val/labels',
     output_img_dir='segmented_scrolls/synthetic_scrolls/val/images',
     output_label_dir='segmented_scrolls/synthetic_scrolls/val/labels',
     )
