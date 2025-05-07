@@ -34,19 +34,33 @@ def plot_image(image_path: str, title: str = "Image", cmap: str = None) -> None:
     plt.axis("off")
     plt.show()
 
-def show_line_segmentation_on_image(image_path, minima, midpoints, N):
+def show_line_segmentation_on_image(image_path, minima=None, midpoints=None, optimized_lines=None, N=None):
+    """
+    Visualizza la segmentazione delle righe su un'immagine.
+    Supporta sia linee orizzontali (midpoints) sia linee inclinate (optimized_lines).
+    """
     img = Image.open(image_path).convert("L")
     img_array = np.array(img)
 
     plt.figure(figsize=(10, 10))
     plt.imshow(img_array, cmap="gray", vmin=0, vmax=255)
-        
-    for y in minima:
-        plt.axhline(y, color="red", linewidth=1.5, linestyle="--", alpha=0.6)
-    for y in midpoints:
-        plt.axhline(y, color="cyan", linewidth=1)
 
-    plt.title(f"Segmentazione in righe (N={N})")
+    if minima is not None:
+        for y in minima:
+            plt.axhline(y, color="red", linewidth=1.5, linestyle="--", alpha=0.6)
+
+    if midpoints is not None:
+        for y in midpoints:
+            plt.axhline(y, color="cyan", linewidth=1)
+
+    if optimized_lines is not None:
+        for (x1, y1), (x2, y2) in optimized_lines:
+            plt.plot([x1, x2], [y1, y2], color="lime", linewidth=2)
+
+    title = "Segmentazione in righe"
+    if N is not None:
+        title += f" (N={N})"
+    plt.title(title)
     plt.axis("off")
     plt.tight_layout()
     plt.show()

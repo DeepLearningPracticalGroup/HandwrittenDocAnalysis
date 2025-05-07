@@ -1,54 +1,47 @@
-"""Line segmentation script for the scrolls dataset.
-
-to execute this script, run the following command:
-.venv/bin/ipython src/task1/scripts/line_segmentation.py
-"""
-
-from src.task1.utils.line_segmentation import segment_scrolls
-import os
-import numpy as np
+from src.task1.utils.line_segmentation import (
+    process_all_scrolls,
+    find_midpoints,
+    optimize_segmentation_lines
+)
 from src.task1.utils.plots import show_line_segmentation_on_image
 from PIL import Image
+import numpy as np
+import os
 
 def main():
+    root_dir = "synthetic_scrolls_text"
+    output_root = "segmented_lines"
+    N = 40
 
-    # Segment generated training scrolls
-    segment_scrolls(
-    input_img_dir='generated_scrolls/train/images',
-    input_label_dir='generated_scrolls/train/labels',
-    output_img_dir='segmented_scrolls/generated_scrolls/train/images',
-    output_label_dir='segmented_scrolls/generated_scrolls/train/labels',
-    N=80,
-    angle_range=(-10, 10),
-    angle_step=0.5,
-    padding=20
-)
-    # Segment generated validation scrolls
-    segment_scrolls(
-    input_img_dir='generated_scrolls/val/images',
-    input_label_dir='generated_scrolls/val/labels',
-    output_img_dir='segmented_scrolls/generated_scrolls/val/images',
-    output_label_dir='segmented_scrolls/generated_scrolls/val/labels',
-    N=80,
-    angle_range=(-10, 10),
-    angle_step=0.5,
-    padding=20
-)
-    # Segment synthetic training scrolls
-    segment_scrolls(
-    input_img_dir='synthetic_scrolls/train/images',
-    input_label_dir='synthetic_scrolls/train/labels',
-    output_img_dir='segmented_scrolls/synthetic_scrolls/train/images',
-    output_label_dir='segmented_scrolls/synthetic_scrolls/train/labels',
+    image_path = "image-data/P564-Fg003-R-C01-R01-binarized.jpg"
+    base_filename = os.path.splitext(os.path.basename(image_path))[0]
+
+    # Prepara immagine e array
+    img = Image.open(image_path).convert("L")
+    img_array = np.array(img)
+
+    # Trova minima e midpoints
+    minima, midpoints = find_midpoints(img_array, N=N)
+
+    # Ottimizza le linee di segmentazione
+    optimized_lines = optimize_segmentation_lines(
+        image_path=image_path,
+        midpoints=midpoints,
+        angle_range=(-10, 10),
+        angle_step=0.5
     )
 
-    # Segment synthetic validation scrolls
-    segment_scrolls(
-    input_img_dir='synthetic_scrolls/val/images',
-    input_label_dir='synthetic_scrolls/val/labels',
-    output_img_dir='segmented_scrolls/synthetic_scrolls/val/images',
-    output_label_dir='segmented_scrolls/synthetic_scrolls/val/labels',
+    # Visualizza tutto insieme
+    show_line_segmentation_on_image(
+        image_path=image_path,
+        minima=minima,
+        midpoints=midpoints,
+        optimized_lines=optimized_lines,
+        N=N
     )
+
+    # Segmenta tutte le immagini nella directory
+    process_all_scrolls(root_dir=root_dir, output_root=output_root, N=N)
 
 if __name__ == "__main__":
     main()
