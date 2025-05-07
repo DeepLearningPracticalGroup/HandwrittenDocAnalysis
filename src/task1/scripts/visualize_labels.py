@@ -1,9 +1,24 @@
+"""
+
+Script to visualize scroll images with bounding boxes from label files.
+
+to execute:
+ipython src/task1/scripts/visualize_labels.py -- --image_path "generated_scrolls/val/images/file_scroll_0000.png" \
+--label_path "generated_scrolls/val/labels/file_scroll_0000.txt"
+
+"""
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import cv2
+import argparse
 
 def visualize_scroll_with_boxes(image_path: str, label_path: str, box_color="red", box_thickness=1):
+    """
+    Visualizes a scroll image with its corresponding labels as bounding boxes.
+    """
+
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     H, W = img.shape
 
@@ -32,9 +47,15 @@ def visualize_scroll_with_boxes(image_path: str, label_path: str, box_color="red
     plt.show()
 
 def main():
-    image_path = "segmented_lines/images/line_02.png"
-    label_path = "segmented_lines/labels/line_02.txt"
-    visualize_scroll_with_boxes(image_path, label_path)
+    parser = argparse.ArgumentParser(description="Visualize bounding boxes on an image.")
+    parser.add_argument("--image_path", type=str, help="Path to the image file.")
+    parser.add_argument("--label_path", type=str, help="Path to the label file.")
+    parser.add_argument("--box_color", type=str, default="red", help="Color of the bounding boxes.")
+    parser.add_argument("--box_thickness", type=int, default=1, help="Thickness of the bounding box edges.")
+    
+    args = parser.parse_args()
+    
+    visualize_scroll_with_boxes(args.image_path, args.label_path, args.box_color, args.box_thickness)
 
 if __name__ == "__main__":
     main()
