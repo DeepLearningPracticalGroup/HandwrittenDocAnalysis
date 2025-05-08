@@ -26,44 +26,42 @@ def main(
     patience: int,
     epochs: int,
     workers: int,
+    pretrained_model_path: str = None,
 ):
     start_time = perf_counter()
 
-    # Load YoLo nano (YOLOv8)
-    ## It is a detector, meaning no need of two models in the pipeline
-    ## But if we need a segmenter first, we can get 'yolov8n-seg.pt'
-    model = YOLO("yolov8n.pt")
+    if pretrained_model_path:
+        print(f"[INFO] Fine-tuning from pretrained model: {pretrained_model_path}")
+        model = YOLO(pretrained_model_path)
 
-    # Train pretrained YOLOv8 model on font-made scrolls:
-    ## YOLO will look at the YAML file where we specify the training and validation set
-    ## along with the labels
-    ### Best model weights will be stored inside runs/
-    model.train(
-        task="detect",
-        data="src/hebrew.yaml",
-        epochs=epochs,
-        imgsz=input_size,
-        batch=batch_size,
-        patience=patience,
-        optimizer=optimizer,
-        workers=workers,
-        save=True,
-    )
+        model.train(
+            task="detect",
+            data="src/hebrew_ft.yaml",
+            epochs=epochs,
+            imgsz=input_size,
+            batch=batch_size,
+            patience=patience,
+            optimizer=optimizer,
+            workers=workers,
+            save=True,
+        )
+    else:
+        print("[INFO] Training from scratch on random scrolls")
+        model = YOLO("yolov8n.pt")
 
-    # Fine-tune YOLO on scroll dataset:
-    model.train(
-        task="detect",
-        data="src/hebrew_ft.yaml",
-        epochs=epochs,
-        imgsz=input_size,
-        batch=batch_size,
-        patience=patience,
-        optimizer=optimizer,
-        workers=workers,
-        save=True,
-    )
+        model.train(
+            task="detect",
+            data="src/hebrew.yaml",
+            epochs=epochs,
+            imgsz=input_size,
+            batch=batch_size,
+            patience=patience,
+            optimizer=optimizer,
+            workers=workers,
+            save=True,
+        )
 
-    print(f"Running time for task 01: {round(perf_counter() - start_time, 2)} seconds")
+    print(f"Training completed in {round(perf_counter() - start_time, 2)} seconds")
 
 
 if __name__ == "__main__":
@@ -93,6 +91,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--workers", type=int, default=1, help="Number of workers for data loading."
     )
+    parser.add_argument(
+        "--pretrained_model_path", type=str, default=None, help="Path to a pretrained model to fine-tune)"
+    )
 
     args = parser.parse_args()
     main(
@@ -102,4 +103,5 @@ if __name__ == "__main__":
         patience=args.patience,
         epochs=args.epochs,
         workers=args.workers,
+        pretrained_model_path=args.pretrained_model_path,
     )

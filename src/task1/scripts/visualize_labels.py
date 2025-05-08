@@ -3,8 +3,8 @@
 Script to visualize scroll images with bounding boxes from label files.
 
 to execute:
-ipython src/task1/scripts/visualize_labels.py -- --image_path "dataset/segmented_scrolls/train/images/random_scroll_0001_line_00.png" \
---label_path "dataset/segmented_scrolls/train/labels/random_scroll_0001_line_00.txt"
+ipython src/task1/scripts/visualize_labels.py -- --image_path "dataset/segmented_scrolls_random/train/images/random_scroll_0002_line_04.png" \
+--label_path "dataset/segmented_scrolls_random/train/labels/random_scroll_0002_line_04.txt"
 
 """
 

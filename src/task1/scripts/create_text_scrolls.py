@@ -1,12 +1,12 @@
 """
 Task 01: DSS dataset
 (a) Preprocessing and character segmentation
-(b) Character recognition
+(b) Character recognition - Scroll Generation (Random & Text-based)
 
 to execute this script:
 
-.venv/bin/ipython src/task1/scripts/create_text_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
---augment_per_char 1
+.venv/bin/ipython src/task1/scripts/create_random_scrolls.py -- --train_char_path "monkbrill_clean" --augmented_char_path "augmented_chars" \
+--augment_per_char 1 --num_train_scrolls 100 --num_val_scrolls 100
 """
 
 from time import perf_counter

@@ -1,9 +1,7 @@
 import os
 import numpy as np
 from PIL import Image, ImageDraw
-import matplotlib.pyplot as plt
 from math import sin, cos, radians
-import cv2
 
 
 def find_midpoints(img_array, N=80):
@@ -18,15 +16,6 @@ def find_midpoints(img_array, N=80):
     ]
 
     midpts = [(minima[i] + minima[i + 1]) // 2 for i in range(len(minima) - 1)]
-
-    if len(midpts) >= 2:
-        first_diff = midpts[1] - midpts[0]
-        last_diff = midpts[-1] - midpts[-2]
-        midpts = (
-            [max(0, midpts[0] - first_diff)]
-            + midpts
-            + [min(img_array.shape[0], midpts[-1] + last_diff)]
-        )
 
     return minima, midpts
 
@@ -109,10 +98,10 @@ def extract_line_segments_with_masks(image_path, line_endpoints, padding=10):
         (ul_x1, ul_y1), (ul_x2, ul_y2) = all_lines[i]
         (ll_x1, ll_y1), (ll_x2, ll_y2) = all_lines[i + 1]
 
-        ul_y1_p = max(0, ul_y1 + padding)
-        ul_y2_p = max(0, ul_y2 + padding)
-        ll_y1_p = min(height - 1, ll_y1 - padding)
-        ll_y2_p = min(height - 1, ll_y2 - padding)
+        ul_y1_p = max(0, ul_y1 - padding)
+        ul_y2_p = max(0, ul_y2 - padding)
+        ll_y1_p = min(height - 1, ll_y1 + padding)
+        ll_y2_p = min(height - 1, ll_y2 + padding)
 
         mask = Image.new("L", (width, height), 255)
         draw = ImageDraw.Draw(mask)
@@ -140,14 +129,38 @@ def extract_line_segments_with_masks(image_path, line_endpoints, padding=10):
     return masked_segments, segment_bounds
 
 
-def save_line_with_labels(line_img, output_dir, base_name, W, top, bottom, yolo_labels):
+def save_line_with_labels(line_img, output_dir, base_name, W, top, bottom, yolo_labels, min_visible_ratio=0.8):
     line_img.save(os.path.join(output_dir, "images", base_name + ".png"))
     new_labels = []
+    img_array = np.array(line_img)
+
     for class_id, x_c_abs, y_c_abs, w_abs, h_abs in yolo_labels:
         y_top = y_c_abs - h_abs / 2
         y_bot = y_c_abs + h_abs / 2
-        if y_bot < top or y_top > bottom:
+        intersection_top = max(y_top, top)
+        intersection_bottom = min(y_bot, bottom)
+        intersection_height = max(0, intersection_bottom - intersection_top)
+        visible_ratio = intersection_height / h_abs
+
+        if visible_ratio < min_visible_ratio:
             continue
+
+        x1_crop = int(x_c_abs - w_abs / 2)
+        y1_crop = int(y_top - top)
+        x2_crop = int(x_c_abs + w_abs / 2)
+        y2_crop = int(y_bot - top)
+
+        x1_crop = max(0, x1_crop)
+        y1_crop = max(0, y1_crop)
+        x2_crop = min(img_array.shape[1] - 1, x2_crop)
+        y2_crop = min(img_array.shape[0] - 1, y2_crop)
+
+        box_region = img_array[y1_crop:y2_crop+1, x1_crop:x2_crop+1]
+        non_white_ratio = np.mean(box_region < 250)
+
+        if non_white_ratio < 0.25:
+            continue
+
         new_y_c = (y_c_abs - top) / (bottom - top)
         new_x_c = x_c_abs / W
         new_w = w_abs / W
