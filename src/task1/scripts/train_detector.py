@@ -9,7 +9,7 @@ to execute this script:
 first pip install ipython
 then enter the following command in terminal (adjust the virtual environment name as needed):
 
-.venv/bin/ipython src/task1/scripts/train_detector.py -- --yaml_file_path 'src/hebrew.yaml' --input_size 640 \
+.venv/bin/ipython src/task1/scripts/train_detector.py -- --input_size 640 \
 --batch_size 16 --optimizer 'Adam' --patience 15 --epochs 1 --workers 1
 """
 
@@ -25,7 +25,6 @@ def main(
     optimizer: str,
     patience: int,
     epochs: int,
-    yaml_file_path: str,
     workers: int,
 ):
     start_time = perf_counter()
@@ -39,9 +38,9 @@ def main(
     ## YOLO will look at the YAML file where we specify the training and validation set
     ## along with the labels
     ### Best model weights will be stored inside runs/
-    """model.train(
+    model.train(
         task="detect",
-        data="src/hebrew_first_task.yaml",
+        data="src/hebrew.yaml",
         epochs=epochs,
         imgsz=input_size,
         batch=batch_size,
@@ -49,12 +48,12 @@ def main(
         optimizer=optimizer,
         workers=workers,
         save=True,
-    )"""
+    )
 
     # Fine-tune YOLO on scroll dataset:
     model.train(
         task="detect",
-        data=yaml_file_path,
+        data="src/hebrew_ft.yaml",
         epochs=epochs,
         imgsz=input_size,
         batch=batch_size,
@@ -72,12 +71,6 @@ if __name__ == "__main__":
         description="Train a YOLO detector on the DSS dataset."
     )
 
-    parser.add_argument(
-        "--yaml_file_path",
-        type=str,
-        required=True,
-        help="Path to the YAML file specifying dataset details.",
-    )
     parser.add_argument(
         "--input_size", type=int, required=True, help="Input image size for YOLO model."
     )
@@ -103,7 +96,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(
-        yaml_file_path=args.yaml_file_path,
         input_size=args.input_size,
         batch_size=args.batch_size,
         optimizer=args.optimizer,

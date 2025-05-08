@@ -6,7 +6,9 @@ IPYTHON := $(VENV)/bin/ipython
 
 .PHONY: all venv install torch-cpu torch-gpu torch-help clean
 
-all: venv install
+all: venv install torch-cpu
+	@echo "All dependencies installed. Use 'make task_1' to run the pipeline."
+	@echo "Use 'make torch-help' for more options."
 
 venv:
 	$(PYTHON) -m venv $(VENV)
@@ -34,14 +36,13 @@ clean:
 	rm -rf __pycache__
 	@echo "Cache removed"
 
-# Tasek 1 - Specific
+# Tasek 1 - Run Entire Pipeline
 
 TRAIN_CHAR_PATH ?= monkbrill_clean
 AUGMENTED_CHAR_PATH ?= augmented_chars
 AUGMENT_PER_CHAR ?= 100
 NUM_TRAIN_SCROLLS ?= 8000
 NUM_VAL_SCROLLS ?= 2000
-YAML_FILE_PATH ?= src/hebrew.yaml
 INPUT_SIZE ?= 1024
 BATCH_SIZE ?= 32
 OPTIMIZER ?= Adam
@@ -55,17 +56,17 @@ task_1:
 	$(IPYTHON) src/task1/scripts/create_random_scrolls.py -- --train_char_path "$(TRAIN_CHAR_PATH)" --augmented_char_path "$(AUGMENTED_CHAR_PATH)" \
 		--augment_per_char $(AUGMENT_PER_CHAR) --num_train_scrolls $(NUM_TRAIN_SCROLLS) --num_val_scrolls $(NUM_VAL_SCROLLS)
 	$(IPYTHON) src/task1/scripts/create_text_scrolls.py -- --train_char_path "$(TRAIN_CHAR_PATH)" --augmented_char_path "$(AUGMENTED_CHAR_PATH)" \
-		--augment_per_char $(AUGMENT_PER_CHAR)
+		--augment_per_char 1
 	$(IPYTHON) src/task1/scripts/line_segmentation.py
-	$(IPYTHON) src/task1/scripts/train_detector.py -- --yaml_file_path "$(YAML_FILE_PATH)" --input_size $(INPUT_SIZE) \
+	$(IPYTHON) src/task1/scripts/train_detector.py -- --input_size $(INPUT_SIZE) \
 		--batch_size $(BATCH_SIZE) --optimizer "$(OPTIMIZER)" --patience $(PATIENCE) --epochs $(EPOCHS) --workers $(WORKERS)
 
 # Test task_1 target with smaller values
 test_task_1:
 	$(MAKE) task_1 \
 		AUGMENT_PER_CHAR=1 \
-		NUM_TRAIN_SCROLLS=50 \
-		NUM_VAL_SCROLLS=20 \
+		NUM_TRAIN_SCROLLS=5 \
+		NUM_VAL_SCROLLS=2 \
 		INPUT_SIZE=128 \
 		EPOCHS=1
 

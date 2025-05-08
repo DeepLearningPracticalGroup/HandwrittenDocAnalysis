@@ -13,12 +13,12 @@ def main():
     # Segment Lines from both random and 'from text' scrolls
     segment_all_scrolls(
         root_dir="dataset/synthetic_scrolls_random/",
-        output_root="dataset/segmented_scrolls",
+        output_root="dataset/segmented_scrolls_random",
         N=40,
     )
     segment_all_scrolls(
         root_dir="dataset/synthetic_scrolls_text/",
-        output_root="dataset/segmented_scrolls",
+        output_root="dataset/segmented_scrolls_text",
         N=40,
     )
 

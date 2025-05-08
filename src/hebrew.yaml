@@ -1,4 +1,4 @@
-path: ../HandwrittenDocAnalysis/dataset/segmented_scrolls
+path: ../HandwrittenDocAnalysis/dataset/segmented_scrolls_random
 train: train
 val: val
 
