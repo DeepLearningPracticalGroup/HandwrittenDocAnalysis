@@ -3,10 +3,10 @@ This script predicts characters from a scroll image using a trained YOLO model.
 It also visualizes the results.
 
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
---model_path "runs/detect/train4/weights/best.pt" \
---image_path "whitebg.png" \
+--model_path "runs/detect/train3/weights/best.pt" \
+--image_path "dataset/segmented_scrolls_random/val/images/random_scroll_0000_line_00.png" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.01
+--confidence 0.41
 """
 
 import argparse
