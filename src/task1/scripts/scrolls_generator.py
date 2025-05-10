@@ -23,6 +23,7 @@ from sklearn.model_selection import train_test_split
 import random
 import argparse
 
+
 def main(
     train_char_path: str,
     augmented_char_path: str,
@@ -57,7 +58,9 @@ def main(
     X_char_train_extended = X_char_train + augmented_paths
     y_char_train_extended = y_char_train + augmented_labels
 
-    print(f"Train set: {len(X_char_train)} original + {len(augmented_paths)} augmented = {len(X_char_train_extended)}")
+    print(
+        f"Train set: {len(X_char_train)} original + {len(augmented_paths)} augmented = {len(X_char_train_extended)}"
+    )
     print(f"Val set: {len(X_char_val)}")
 
     # === 1. Generate Random Scrolls using N-grams ===
@@ -89,9 +92,21 @@ def main(
     # === 2. Generate Text-Based Scrolls (e.g. Bible, Aesop) ===
     print("\nGenerating TEXT-based synthetic scrolls...")
     for split, text_file, X_chars, y_chars, noise_prob in [
-        ("train", "text_files/bible_train.txt", X_char_train_extended, y_char_train_extended, 0.75),
+        (
+            "train",
+            "text_files/bible_train.txt",
+            X_char_train_extended,
+            y_char_train_extended,
+            0.75,
+        ),
         ("val", "text_files/bible_val.txt", X_char_val, y_char_val, 0.50),
-        ("train", "text_files/hebrew_text/aesops_fables.txt", X_char_train_extended, y_char_train_extended, 0.75),
+        (
+            "train",
+            "text_files/hebrew_text/aesops_fables.txt",
+            X_char_train_extended,
+            y_char_train_extended,
+            0.75,
+        ),
     ]:
         generate_file_scroll(
             file_path=text_file,
@@ -105,7 +120,10 @@ def main(
             words_per_line_range=(5, 10),
         )
 
-    print(f"\nScroll generation completed in {round(perf_counter() - start_time, 2)} seconds")
+    print(
+        f"\nScroll generation completed in {round(perf_counter() - start_time, 2)} seconds"
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

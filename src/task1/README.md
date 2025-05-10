@@ -15,12 +15,12 @@ All scripts for this task are located in `src/task1/scripts`.
    Download the `monkbrill/` folder and place it at the root of the repository. This contains the character images used for training.
 
 2. **Clean the character data**  
-   Run the cleaning script to generate a new `monkbrill_clean/` folder with cleaned characters.
+   Run `data_cleaning.py` to generate a new `monkbrill_clean/` folder with cleaned characters.
 
 3. **Download and binarize noise maps**  
    - Download the noise maps from the provided Google Drive link.  
    - Place them inside a `noise_maps/` folder at the root.  
-   - Run the binarization script to generate `noise_maps/binarized/`.
+   - Run `noise_maps_binarizing.py` to get `noise_maps/binarized/`.
 
 4. **Install ImageMorph tool**  
    Download from: [https://github.com/GrHound/imagemorph.c](https://github.com/GrHound/imagemorph.c)  
@@ -28,41 +28,42 @@ All scripts for this task are located in `src/task1/scripts`.
 
 ---
 
-### 📝 Text Translation (Optional)
+### Text Translation (Optional)
 
 Use `translation.py` to translate Aesop’s fables or other `.txt` files.  
 Translated `.txt` files are already available in the `text_files/` folder.  
-If you add your own files, you must specify whether they are for training or validation in the YOLO step.
+If you add your own files, you must implicitly modify the scroll generation script and specify whether they are for training or validation and place them in the correct directory.
 
 ---
 
-### 🖼️ Synthetic Data Generation
+### Synthetic Data Generation
 
-Run the following scripts to create synthetic scroll images:
-- `create_random_scrolls.py`: Generates random scrolls using the cleaned characters and noise maps.
-- `create_text_scrolls.py`: Generates scrolls from Hebrew `.txt` files.
+Run the following script to create synthetic scroll images:
+- `scrolls_generator.py`: Generates random scrolls using the cleaned characters and noise maps, involving both random n-grams and existing text.
 
-These scripts rely on the cleaned character set (`monkbrill_clean/`) and binarized noise maps (`noise_maps/binarized/`).
+The script relies on the cleaned character set (`monkbrill_clean/`) and binarized noise maps (`noise_maps/binarized/`).
 
+The scrolls are stored inside `dataset/synthetic_scrolls_text` and `dataset/synthetic_scrolls_random`.
 ---
 
-### ✂️ Line Segmentation
+### Line Segmentation
 
 Use `line_segmentation.py` to segment the scrolls into individual lines.  
-This creates a `segmented_scrolls/` folder, which is used for training YOLO.
+
+The scrolls are stored inside `dataset/segmented_scrolls_random` and `dataset/segmented_scrolls_text`. These are used to train YOLO (specified in hebrew.yaml and hebrew_ft.yaml respectively).
 
 ---
 
-### 🧠 Train the Detector
+### Train the Detector
 
-Run `train_detector.py` to train the YOLO model on the segmented scrolls using your dataset and configuration (`src/hebrew.yaml`, etc.).
+Run `train_detector.py` to train the YOLO model on the segmented scrolls using your dataset and configuration (`src/hebrew.yaml`, `src/hebrew_ft.yaml`).
 
 ---
 
-### 🔍 Predict & Visualize
+### Predict & Visualize
 
-- Use the prediction script to apply the trained YOLO model to new scroll images.
-- Use `visualise_bounding_boxes.py` to overlay bounding boxes from label files onto images for inspection.
+- Use the `make_prediction.py` prediction script to apply the trained YOLO model to new scroll image and visualize while printing the predicted hebrew text.
+- Use `yolo_recognizer.py` to execute the whole inference pipeline (line segmentation & detection). The predictions are stored in the output directory as .txt files. 
 
 ---
 
@@ -95,3 +96,23 @@ Run `train_detector.py` to train the YOLO model on the segmented scrolls using y
 
 ---
 
+## Limitations
+
+## 🚫 Limitations
+
+This project version of Task 1 has a few known limitations, mostly due to time constraints and data constraints:
+
+1. **Missing Tsadi Variants in Generated Data**  
+   The file `ngram_frequencies_withNames.csv` includes ancient Hebrew n-gram statistics, where the character *tsadi* appears. However, our `hebrew.yaml` used for YOLO training distinguishes only *tsadi-medial* and *tsadi-final*, not a generic *tsadi*. As a result, *tsadi* is never generated in scrolls, and the model has never seen or been trained to predict it. This inconsistency was discovered late in development and fixing it would have required regenerating thousands of scrolls, which normally takes several hours, and of couse it was infeasible before the submission deadline.
+
+2. **Use of Modern Hebrew Texts**  
+   The `bible.txt` and translated Aesop’s fables are likely written in modern Hebrew. While we hoped for some linguistic overlap with ancient Hebrew, there are notable differences. A practical consequence is for instance that the  *mem-medial* character never appears in these texts and thus is missing from the training data, which is visible in the confusion matrix of the final model. While YOLO is primarily a visual model and does not heavily rely on long-range context, the linguistic mismatch introduces some label shift.
+
+3. **Limited Scroll Realism**  
+   Our synthetic scrolls include noise for realism, but the distribution of this noise differs noticeably from real Dead Sea Scrolls. Since the test set includes real fragments, this domain gap likely affects final performance. Future work could involve domain adaptation or noise simulation better aligned with test scrolls.
+
+4. **Data Coverage and Scarcity**  
+   While we generated 10,000 scrolls for training and validation, this may still not be sufficient. Further improvement could involve generating more random n-gram scrolls or attempting to mine ancient Hebrew texts from the web in 'text format' (if available), though it is uncertain if such data exists and requires further exploration.
+
+5. **Post-YOLO Correction Model Not Implemented**  
+   Ideally, misclassifications from YOLO detection could be corrected using a sequential model. We did not implement this due to scope and time constraints.

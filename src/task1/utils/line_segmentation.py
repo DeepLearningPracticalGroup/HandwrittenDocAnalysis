@@ -129,7 +129,9 @@ def extract_line_segments_with_masks(image_path, line_endpoints, padding=10):
     return masked_segments, segment_bounds
 
 
-def save_line_with_labels(line_img, output_dir, base_name, W, top, bottom, yolo_labels, min_visible_ratio=0.8):
+def save_line_with_labels(
+    line_img, output_dir, base_name, W, top, bottom, yolo_labels, min_visible_ratio=0.8
+):
     line_img.save(os.path.join(output_dir, "images", base_name + ".png"))
     new_labels = []
     img_array = np.array(line_img)
@@ -155,7 +157,7 @@ def save_line_with_labels(line_img, output_dir, base_name, W, top, bottom, yolo_
         x2_crop = min(img_array.shape[1] - 1, x2_crop)
         y2_crop = min(img_array.shape[0] - 1, y2_crop)
 
-        box_region = img_array[y1_crop:y2_crop+1, x1_crop:x2_crop+1]
+        box_region = img_array[y1_crop : y2_crop + 1, x1_crop : x2_crop + 1]
         non_white_ratio = np.mean(box_region < 250)
 
         if non_white_ratio < 0.25:
@@ -214,10 +216,10 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
             )
     else:
         if output_dir is not None:
-                os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
-                for i, segment in enumerate(segments):
-                    base_name = f"{scroll_id}_line_{i:02d}.png"
-                    segment.save(os.path.join(output_dir, "images", base_name))
+            os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
+            for i, segment in enumerate(segments):
+                base_name = f"{scroll_id}_line_{i:02d}.png"
+                segment.save(os.path.join(output_dir, "images", base_name))
 
     return segments
 

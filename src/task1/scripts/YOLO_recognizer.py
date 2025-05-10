@@ -1,3 +1,7 @@
+"""
+.venv/bin/ipython src/task1/scripts/YOLO_recognizer.py -- --model_path "runs/detect/train3/weights/best.pt" --input_dir "test" --output_dir "results/"
+"""
+
 import os
 import logging
 from ultralytics import YOLO

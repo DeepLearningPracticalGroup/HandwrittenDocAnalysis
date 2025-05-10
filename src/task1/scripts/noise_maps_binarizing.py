@@ -5,7 +5,6 @@ to execute:
 .venv/bin/ipython src/task1/scripts/noise_maps_binarizing.py
 """
 
-
 import os
 from glob import glob
 from src.task1.utils.preprocessing import binarize_and_crop_image
@@ -29,6 +28,7 @@ def main():
         binarize_and_crop_image(img_path, output_path)
 
     print(f"Binarized {len(image_paths)} images to {output_subfolder}")
+
 
 if __name__ == "__main__":
     main()

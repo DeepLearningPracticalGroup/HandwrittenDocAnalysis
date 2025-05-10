@@ -92,7 +92,10 @@ if __name__ == "__main__":
         "--workers", type=int, default=1, help="Number of workers for data loading."
     )
     parser.add_argument(
-        "--pretrained_model_path", type=str, default=None, help="Path to a pretrained model to fine-tune)"
+        "--pretrained_model_path",
+        type=str,
+        default=None,
+        help="Path to a pretrained model to fine-tune)",
     )
 
     args = parser.parse_args()
