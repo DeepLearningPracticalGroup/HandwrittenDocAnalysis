@@ -88,14 +88,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_path",
         type=str,
-        required=True,
-        help="Path to the trained YOLO model file.",
+        default="yolov8n_640_ft/weights/best.pt",
+        help="Path to the trained YOLO model file (default: yolov8n_640_ft/weights/best.pt).",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
-        required=True,
-        help="Path to the folder where output text files will be saved.",
+        default="final_predictions/",
+        help="Path to the folder where output text files will be saved (default: final_predictions/).",
     )
     parser.add_argument(
         "--confidence",

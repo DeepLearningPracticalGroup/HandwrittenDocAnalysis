@@ -54,29 +54,35 @@ Inside `src/taskX`(where X the number of the task), you can find instructions on
 
 ## 🔍 Task 1 Prediction
 
-To perform predictions on scroll images using the trained YOLO model, use the script located at:
+To perform predictions on scroll images using your trained YOLO model, use the script located at:
 
 `src/task1/scripts/YOLO_recognizer.py`
 
 This script segments each scroll into horizontal lines, applies the YOLO model to detect Hebrew characters, and writes the predicted characters into a `.txt` file for each image.
 
+---
+
+### ▶️ How to Run
+
+Activate your virtual environment and run the following command:
+
+`.venv/bin/ipython src/task1/scripts/YOLO_recognizer.py -- --input_dir "<path_to_input_images>"`
+
+This script segments each scroll into horizontal lines, applies the YOLO model to detect Hebrew characters, and writes the predicted characters into a `.txt` file for each image.
 
 ---
 
-### Required Arguments
+### Fixed Arguments
 
-When using the script, you **must specify the following three arguments**:
+When using the script, make sure `yolov8n_640_ft/weights/best.pt` is located at the repo's root. The default args look like:
 
 1. **`--model_path`**:  
-   Path to the trained YOLO `.pt` model file (e.g., `runs/detect/train3/weights/best.pt`).
+   Path to the trained YOLO `.pt` model file (default is `yolov8n_640_ft/weights/best.pt`).
 
-2. **`--input_dir`**:  
-   Directory containing the input scroll images (supported formats: `.pbm`, `.png`, `.jpg`, `.jpeg`).
+2. **`--output_dir`**:  
+   Directory where output `.txt` files will be saved. The directory will be created if it does not exist. Default is `final_predictions/`.
 
-3. **`--output_dir`**:  
-   Directory where output `.txt` files will be saved. The directory will be created if it does not exist.
-
-4. **`--confidence`**:  
+3. **`--confidence`**:  
    Confidence threshold for YOLO prediction. Default is 0.39.
 
 ---
@@ -95,9 +101,7 @@ Each line in the image (segmented horizontally) is written as a separate line of
 
 ### ⚠️ Potential Bugs and Troubleshooting
 
-- Supported image formats include `.pbm`, `.png`, `.jpg`, and `.jpeg`.
+- Be carefult. Supported image formats include `.pbm`, `.png`, `.jpg`, and `.jpeg`.
 - If YOLO does not predict anything, an error will likely be returned. If this happens, try lowering the confidence threshold.
 
 ---
-
-
