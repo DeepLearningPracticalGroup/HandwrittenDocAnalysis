@@ -23,3 +23,8 @@ If you want to use a different Python version (e.g., Python 3.10), you can chang
 
 The Makefile also includes a clean command to remove the virtual environment and cache files.
 
+---
+
+## More Documentation
+
+Inside `src/taskX`(where X the number of the task), you can find instructions on how to execute the task-specific pipeline, information about the content of the scripts, and other comments such as limitations.
