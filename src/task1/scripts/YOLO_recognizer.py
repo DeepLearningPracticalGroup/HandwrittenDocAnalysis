@@ -7,15 +7,16 @@ from ultralytics import YOLO
 import numpy as np
 from src.task1.utils.line_segmentation import segment_image_into_lines
 import argparse
+import yaml
 
 
-def predict_text_from_image(image_path, model):
+def predict_text_from_image(image_path, model, hebrew_names):
     lines = segment_image_into_lines(image_path, output_dir=None, label_path=None)
     predictions = []
 
     for line_img in lines:
         line_array = np.array(line_img.convert("RGB"))
-        results = model.predict(source=line_array, conf=0.01, verbose=False)
+        results = model.predict(source=line_array, conf=0.40, verbose=False)
 
         if len(results) == 0 or results[0].boxes is None:
             predictions.append("")
@@ -27,7 +28,7 @@ def predict_text_from_image(image_path, model):
         line_pred = [(int(cls), int(box[0])) for box, cls in zip(boxes, classes)]
         line_pred.sort(key=lambda x: x[1])
 
-        chars = [model.hebrew_names[cls] for cls, _ in line_pred]
+        chars = [hebrew_names[cls] for cls, _ in line_pred]
         predictions.append("".join(chars))
 
     return predictions
@@ -39,6 +40,10 @@ def main(input_dir: str):
 
     model = YOLO(model_path)
 
+    with open("src/hebrew.yaml", "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+        hebrew_names = {int(k): v for k, v in config["hebrew_names"].items()}
+
     os.makedirs("results", exist_ok=True)
 
     for filename in sorted(os.listdir(input_dir)):
@@ -49,7 +54,7 @@ def main(input_dir: str):
         base_name = os.path.splitext(filename)[0]
         output_txt_path = os.path.join("results", f"{base_name}_characters.txt")
 
-        predictions = predict_text_from_image(image_path, model)
+        predictions = predict_text_from_image(image_path, model, hebrew_names)
 
         with open(output_txt_path, "w", encoding="utf-8") as f:
             for line in predictions:

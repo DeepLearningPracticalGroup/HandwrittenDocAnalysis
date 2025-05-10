@@ -213,10 +213,11 @@ def segment_image_into_lines(image_path, output_dir, label_path=None, N=80, marg
                 segment, output_dir, base_name, W, top, bottom, yolo_labels
             )
     else:
-        for i, segment in enumerate(segments):
-            base_name = f"{scroll_id}_line_{i:02d}.png"
-            os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
-            segment.save(os.path.join(output_dir, "images", base_name))
+        if output_dir is not None:
+                os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
+                for i, segment in enumerate(segments):
+                    base_name = f"{scroll_id}_line_{i:02d}.png"
+                    segment.save(os.path.join(output_dir, "images", base_name))
 
     return segments
 
