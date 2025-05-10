@@ -1,8 +1,5 @@
-"""
-.venv/bin/ipython src/task1/scripts/YOLO_recognizer.py -- --input test
-"""
-
 import os
+import logging
 from ultralytics import YOLO
 import numpy as np
 from src.task1.utils.line_segmentation import segment_image_into_lines
@@ -34,11 +31,20 @@ def predict_text_from_image(image_path, model, hebrew_names):
     return predictions
 
 
-def main(input_dir: str):
+def main(input_dir: str, model_path: str, output_dir: str):
+    """
+    Main function to process images and predict text.
 
-    model_path = "runs/detect/yolov8n_640_ft/weights/best.pt"
-
-    model = YOLO(model_path)
+    Args:
+        input_dir (str): Path to the input directory containing images.
+        model_path (str): Path to the trained YOLO model.
+        output_dir (str): Path to the output directory for saving predictions.
+    """
+    try:
+        model = YOLO(model_path)
+    except Exception as e:
+        logging.error(f"Failed to load YOLO model: {e}")
+        return
 
     with open("src/hebrew.yaml", "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -47,12 +53,11 @@ def main(input_dir: str):
     os.makedirs("results", exist_ok=True)
 
     for filename in sorted(os.listdir(input_dir)):
-        if not filename.lower().endswith((".png", ".jpg", ".jpeg", ".pbm")):
-            print(f"Processing {filename}...")
-            continue
-        image_path = os.path.join(input_dir, filename)
-        base_name = os.path.splitext(filename)[0]
-        output_txt_path = os.path.join("results", f"{base_name}_characters.txt")
+        if filename.lower().endswith((".png", ".jpg", ".jpeg", ".pbm")):
+            logging.info(f"Processing {filename}...")
+            image_path = os.path.join(input_dir, filename)
+            base_name = os.path.splitext(filename)[0]
+            output_txt_path = os.path.join(output_dir, f"{base_name}_characters.txt")
 
         predictions = predict_text_from_image(image_path, model, hebrew_names)
 
@@ -68,11 +73,23 @@ if __name__ == "__main__":
         description="Recognize DSS scroll text using a trained YOLO model."
     )
     parser.add_argument(
-        "--input",
+        "--input_dir",
         type=str,
         required=True,
         help="Path to folder containing test images.",
     )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        required=True,
+        help="Path to the trained YOLO model file.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        required=True,
+        help="Path to the folder where output text files will be saved.",
+    )
     args = parser.parse_args()
 
-    main(args.input)
+    main(args.input_dir, args.model_path, args.output_dir)
