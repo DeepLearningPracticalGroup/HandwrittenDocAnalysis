@@ -13,15 +13,38 @@ This repository contains our submission for the Deep Learning Practical course. 
 
 ## ⚙️ Environment Setup
 
-To set up the environment, use the provided Makefile.
+To set up the environment and install all necessary dependencies, use the provided `Makefile`.
 
-By default, the Makefile uses Python 3.11 and creates a virtual environment in the `.venv` directory. It then installs all required packages from `requirements.txt`.
+By default, the Makefile uses **Python 3.11** and creates a virtual environment in the `.venv/` directory. It then installs required packages from `requirements.txt`. You can customize the Python version by changing the `PYTHON` variable at the top of the Makefile (e.g., to Python 3.10).
 
-The Makefile also provides commands to install either the CPU or GPU version of PyTorch and torchvision. The GPU installation uses CUDA 11.8. A help command is included to guide users in choosing the appropriate PyTorch version.
+### Basic Installation
 
-If you want to use a different Python version (e.g., Python 3.10), you can change the `PYTHON` variable at the top of the Makefile. This will not significantly affect the project. The translation script used in Task 1 is optional and already processed text files are provided in the `text_files/` folder.
+Run one of the following:
 
-The Makefile also includes a clean command to remove the virtual environment and cache files.
+- `make all` – Installs everything including the **CPU version** of PyTorch and torchvision.
+- `make all-gpu` – Installs everything including the **GPU version** of PyTorch (CUDA 11.8).
+- `make torch-help` – Prints instructions for choosing between CPU and GPU versions of PyTorch.
+
+### Individual Commands
+
+- `make venv` – Creates the Python virtual environment at `.venv/`.
+- `make install` – Installs all required Python packages listed in `requirements.txt`.
+- `make torch-cpu` – Installs the CPU version of PyTorch and torchvision.
+- `make torch-gpu` – Installs the GPU version of PyTorch and torchvision using CUDA 11.8.
+- `make clean` – Removes the virtual environment and Python cache files.
+
+---
+
+### Running the Task 1 Pipeline
+
+Once the environment is ready, you can run the full Task 1 pipeline using:
+
+- `make task_1` – Runs all steps: data cleaning, noise map binarization, scroll generation (random + text), line segmentation, YOLO training, and optional fine-tuning if a pretrained model is available.
+
+You can also:
+
+- `make test_task_1` – Runs a small test with fewer augmentations, fewer scrolls, and only 1 training epoch, to quickly verify that the pipeline works.
+- `make reset_task_1` – Deletes all generated folders related to Task 1 (`augmented_chars`, `dataset`, `noise_maps/binarized`, and `monkbrill_clean`) to start fresh.
 
 ---
 

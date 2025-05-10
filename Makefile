@@ -10,6 +10,10 @@ all: venv install torch-cpu
 	@echo "All dependencies installed. Use 'make task_1' to run the pipeline."
 	@echo "Use 'make torch-help' for more options."
 
+all-gpu: venv install torch-gpu
+	@echo "All dependencies installed. Use 'make task_1' to run the pipeline."
+	@echo "Use 'make torch-help' for more options."
+
 venv:
 	$(PYTHON) -m venv $(VENV)
 	@echo "Virtual environment created in $(VENV)"
