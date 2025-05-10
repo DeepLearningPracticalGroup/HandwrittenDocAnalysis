@@ -4,9 +4,9 @@ It also visualizes the results.
 
 .venv/bin/ipython src/task1/scripts/make_prediction.py -- \
 --model_path "runs/detect/train3/weights/best.pt" \
---image_path "dataset/segmented_scrolls_random/val/images/random_scroll_0000_line_00.png" \
+--image_path "image-data/P22-Fg008-R-C01-R01-binarized.jpg" \
 --yaml_file_path "src/hebrew.yaml" \
---confidence 0.41
+--confidence 0.395
 """
 
 import argparse

@@ -47,7 +47,7 @@ def main(
         )
     else:
         print("[INFO] Training from scratch on random scrolls")
-        model = YOLO("yolov8n.pt")
+        model = YOLO("yolov8s.pt")
 
         model.train(
             task="detect",
