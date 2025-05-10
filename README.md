@@ -48,6 +48,56 @@ You can also:
 
 ---
 
-## More Documentation
+## 📁 More Documentation
 
 Inside `src/taskX`(where X the number of the task), you can find instructions on how to execute the task-specific pipeline, information about the content of the scripts, and other comments such as limitations.
+
+## 🔍 Task 1 Prediction
+
+To perform predictions on scroll images using the trained YOLO model, use the script located at:
+
+`src/task1/scripts/YOLO_recognizer.py`
+
+This script segments each scroll into horizontal lines, applies the YOLO model to detect Hebrew characters, and writes the predicted characters into a `.txt` file for each image.
+
+
+---
+
+### Required Arguments
+
+When using the script, you **must specify the following three arguments**:
+
+1. **`--model_path`**:  
+   Path to the trained YOLO `.pt` model file (e.g., `runs/detect/train3/weights/best.pt`).
+
+2. **`--input_dir`**:  
+   Directory containing the input scroll images (supported formats: `.pbm`, `.png`, `.jpg`, `.jpeg`).
+
+3. **`--output_dir`**:  
+   Directory where output `.txt` files will be saved. The directory will be created if it does not exist.
+
+4. **`--confidence`**:  
+   Confidence threshold for YOLO prediction. Default is 0.39.
+
+---
+
+### Output Format
+
+For every input image, the script generates a `.txt` file in the output directory.  
+Each line in the image (segmented horizontally) is written as a separate line of predicted characters.
+
+**Example:**
+
+- Input image: `test/25-Fg001.pbm`  
+- Output file: `results/25-Fg001_characters.txt`
+
+---
+
+### ⚠️ Potential Bugs and Troubleshooting
+
+- Supported image formats include `.pbm`, `.png`, `.jpg`, and `.jpeg`.
+- If YOLO does not predict anything, an error will likely be returned. If this happens, try lowering the confidence threshold.
+
+---
+
+

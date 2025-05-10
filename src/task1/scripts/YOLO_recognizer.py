@@ -1,5 +1,5 @@
 """
-.venv/bin/ipython src/task1/scripts/YOLO_recognizer.py -- --model_path "runs/detect/train3/weights/best.pt" --input_dir "test" --output_dir "results/"
+.venv/bin/ipython src/task1/scripts/YOLO_recognizer.py -- --model_path "runs/detect/train3/weights/best.pt" --input_dir "test" --output_dir "results/" --confidence 0.39
 """
 
 import os
@@ -11,13 +11,13 @@ import argparse
 import yaml
 
 
-def predict_text_from_image(image_path, model, hebrew_names):
+def predict_text_from_image(image_path, model, hebrew_names, confidence):
     lines = segment_image_into_lines(image_path, output_dir=None, label_path=None)
     predictions = []
 
     for line_img in lines:
         line_array = np.array(line_img.convert("RGB"))
-        results = model.predict(source=line_array, conf=0.1, verbose=False)
+        results = model.predict(source=line_array, conf=confidence, verbose=False)
 
         if len(results) == 0 or results[0].boxes is None:
             predictions.append("")
@@ -35,7 +35,7 @@ def predict_text_from_image(image_path, model, hebrew_names):
     return predictions
 
 
-def main(input_dir: str, model_path: str, output_dir: str):
+def main(input_dir: str, model_path: str, output_dir: str, confidence: float):
     """
     Main function to process images and predict text.
 
@@ -43,6 +43,7 @@ def main(input_dir: str, model_path: str, output_dir: str):
         input_dir (str): Path to the input directory containing images.
         model_path (str): Path to the trained YOLO model.
         output_dir (str): Path to the output directory for saving predictions.
+        confidence (float): Confidence threshold for YOLO predictions.
     """
     try:
         model = YOLO(model_path)
@@ -63,7 +64,7 @@ def main(input_dir: str, model_path: str, output_dir: str):
             base_name = os.path.splitext(filename)[0]
             output_txt_path = os.path.join(output_dir, f"{base_name}_characters.txt")
 
-        predictions = predict_text_from_image(image_path, model, hebrew_names)
+        predictions = predict_text_from_image(image_path, model, hebrew_names, confidence)
 
         with open(output_txt_path, "w", encoding="utf-8") as f:
             for line in predictions:
@@ -94,6 +95,12 @@ if __name__ == "__main__":
         required=True,
         help="Path to the folder where output text files will be saved.",
     )
+    parser.add_argument(
+        "--confidence",
+        type=float,
+        default=0.39,
+        help="Confidence threshold for YOLO predictions (default: 0.39).",
+    )
     args = parser.parse_args()
 
-    main(args.input_dir, args.model_path, args.output_dir)
+    main(args.input_dir, args.model_path, args.output_dir, args.confidence)
