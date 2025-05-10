@@ -16,7 +16,7 @@ def predict_text_from_image(image_path, model, hebrew_names):
 
     for line_img in lines:
         line_array = np.array(line_img.convert("RGB"))
-        results = model.predict(source=line_array, conf=0.40, verbose=False)
+        results = model.predict(source=line_array, conf=0.1, verbose=False)
 
         if len(results) == 0 or results[0].boxes is None:
             predictions.append("")

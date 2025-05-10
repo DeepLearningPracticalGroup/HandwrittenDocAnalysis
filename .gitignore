@@ -201,3 +201,5 @@ cython_debug/
 /generated_scrolls/
 /segmented_scrolls/
 /dataset/
+/results
+/test/
