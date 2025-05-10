@@ -64,7 +64,9 @@ def main(input_dir: str, model_path: str, output_dir: str, confidence: float):
             base_name = os.path.splitext(filename)[0]
             output_txt_path = os.path.join(output_dir, f"{base_name}_characters.txt")
 
-        predictions = predict_text_from_image(image_path, model, hebrew_names, confidence)
+        predictions = predict_text_from_image(
+            image_path, model, hebrew_names, confidence
+        )
 
         with open(output_txt_path, "w", encoding="utf-8") as f:
             for line in predictions:
