@@ -190,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--confidence",
         type=float,
-        default=0.25,
+        default=0.40,
         help="Confidence threshold for predictions.",
     )
 
