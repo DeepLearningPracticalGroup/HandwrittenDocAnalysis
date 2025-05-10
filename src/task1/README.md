@@ -96,9 +96,9 @@ Run `train_detector.py` to train the YOLO model on the segmented scrolls using y
 
 ---
 
-## Limitations
+## Limitations & Bugs
 
-## 🚫 Limitations
+### 🚫 Limitations
 
 This project version of Task 1 has a few known limitations, mostly due to time constraints and data constraints:
 
@@ -116,3 +116,9 @@ This project version of Task 1 has a few known limitations, mostly due to time c
 
 5. **Post-YOLO Correction Model Not Implemented**  
    Ideally, misclassifications from YOLO detection could be corrected using a sequential model. We did not implement this due to scope and time constraints.
+
+### 🐛 Bugs
+
+The YAML files specify a relative path to both training and validation images used for YOLO training. When running `train_detector.py`, the YOLO module attempts to find these images; however, we noticed that on some systems (e.g., on the remote cluster's Linux environment), the relative path is not resolved correctly.
+
+We strongly advise updating the `train` and `val` keys in both `hebrew.yaml` and `hebrew_ft.yaml` to the **absolute (global) path** of your system pointing to the segmented scrolls directory, especially if you encounter a file-not-found error.
